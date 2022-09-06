@@ -69,3 +69,5 @@ echo " ➡ svelte build size:       ${svelte_build_size} KB"
 echo " ➡ svelte_kit build size:   ${svelte_kit_build_size} KB"
 echo " ➡ react build size:        ${react_build_size} KB"
 echo " ➡ react_next build size:   ${react_next_build_size} KB"
+
+echo "${svelte_yarn};${svelte_kit_yarn};${react_yarn};${react_next_yarn};${svelte_build};${svelte_kit_build};${react_build};${react_next_build};${svelte_build_size};${svelte_kit_build_size};${react_build_size};${react_next_build_size}" >> results.csv

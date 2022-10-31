@@ -28,7 +28,7 @@ Example of result on my machine:
 
 Pictured results:
 
-| - | - | - |
+| yarn install<br>(in ms, lower is better) | yarn build<br>(in ms, lower is better) | build size<br>(in KB, lower is better) |
 | --- | --- | --- |
 | ![](./docs/yarn_install.png) | ![](./docs/yarn_build.png) | ![](./docs/build_size.png) |
 

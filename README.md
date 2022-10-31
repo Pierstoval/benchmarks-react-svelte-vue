@@ -25,3 +25,10 @@ Example of result on my machine:
  ➡ react build size:        604 KB
  ➡ react_next build size:   440 KB
 ```
+
+Pictured results:
+
+| - | - | - |
+| --- | --- | --- |
+| ![](./docs/yarn_install.png) | ![](./docs/yarn_build.png) | ![](./docs/build_size.png) |
+

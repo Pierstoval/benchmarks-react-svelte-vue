@@ -6,7 +6,8 @@ firstrow = system('head -1 '.datafile)
 
 unset key
 
-set xtics 1 scale 0 rotate by 45 offset -2,-2
+set bmargin 8
+set xtics 1 scale 0 rotate by -45
 set xrange [0:20]
 set xlabel "Commands"
 set ylabel "Execution time"
@@ -32,7 +33,7 @@ set boxwidth 0.8
 set style fill solid
 
 plot for [i=1:12] datafile using (posX(i)):i:xticlabel(func(i)) with linespoints pointtype 1 pointsize 2, \
-    for [i=13:18] datafile using (posX(i+1)):i with boxes axis x1y2
+    for [i=13:18] datafile using (posX(i+1)):i:xticlabel(func(i)) with boxes axis x1y2
 
 set terminal png size 1100,700
 set output 'output.png'

@@ -1,8 +1,8 @@
-import {writable} from "svelte/store";
+import { reactive } from 'vue'
 
 const storageKey = 'todoStore';
 
-function getBaseValue() {
+function getBaseValues() {
     let value = '[]';
     if (typeof window !== 'undefined') {
         value = window?.localStorage?.getItem(storageKey) || '[]';
@@ -19,8 +19,10 @@ function saveValue(values: Array<{ text: string }>) {
     window.localStorage.setItem(storageKey, JSON.stringify(values || []));
 }
 
-const todoStore = writable(getBaseValue());
-
-todoStore.subscribe((values) => saveValue(values));
-
-export {todoStore};
+export const todoStore = reactive({
+    values: getBaseValues(),
+    update: function(callback: Function) {
+        todoStore.values = callback(todoStore.values);
+        saveValue(todoStore.values);
+    }
+});

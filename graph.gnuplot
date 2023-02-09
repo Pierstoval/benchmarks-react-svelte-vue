@@ -6,14 +6,16 @@ firstrow = system('head -1 '.datafile)
 
 unset key
 
-set xtics 1 scale 0
+set xtics 1 scale 0 rotate by 45 offset -2,-2
 set xrange [0:20]
 set xlabel "Commands"
 set ylabel "Execution time"
 set y2label "Build size"
 set title "Benchmarking Svelte, React and Vue"
 
-#set format x system('cat '.datafile.' | head -1 | cut -d ";" -f'.'%g')
+func(x) = system(sprintf('cat '.datafile.' | head -1 | cut -d ";" -f%d', x))
+
+#set format x func(x)
 set format y "% g ms"
 set format y2 "% g KB"
 
@@ -29,7 +31,7 @@ set arrow from 13, graph 0 to 13, graph 1 nohead
 set boxwidth 0.8
 set style fill solid
 
-plot for [i=1:12] datafile using (posX(i)):i:xticlabel($0) with linespoints pointtype 1 pointsize 2, \
+plot for [i=1:12] datafile using (posX(i)):i:xticlabel(func(i)) with linespoints pointtype 1 pointsize 2, \
     for [i=13:18] datafile using (posX(i+1)):i with boxes axis x1y2
 
 set terminal png size 1100,700

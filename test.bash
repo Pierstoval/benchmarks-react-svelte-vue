@@ -15,6 +15,7 @@ rm -rf \
     \
     react-next/node_modules \
     react-next/.next \
+    react-next/next-env.d.ts \
     react-next/out \
     \
     svelte/node_modules \

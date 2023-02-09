@@ -86,4 +86,26 @@ echo " ➡ react_next build size:   ${react_next_build_size} KB"
 echo " ➡ vue build size:          ${vue_build_size} KB"
 echo " ➡ vue nuxt build size:     ${vue_nuxt_build_size} KB"
 
-echo "${svelte_yarn};${svelte_kit_yarn};${react_yarn};${react_next_yarn};${svelte_build};${svelte_kit_build};${react_build};${react_next_build};${svelte_build_size};${svelte_kit_build_size};${react_build_size};${react_next_build_size};${vue_yarn};${vue_build};${vue_build_size};${vue_nuxt_yarn};${vue_nuxt_build};${vue_nuxt_build_size}" >> results.csv
+CSVLINE=""
+CSVLINE+="${svelte_yarn};"
+CSVLINE+="${svelte_kit_yarn};"
+CSVLINE+="${react_yarn};"
+CSVLINE+="${react_next_yarn};"
+CSVLINE+="${vue_yarn};"
+CSVLINE+="${vue_nuxt_yarn};"
+
+CSVLINE+="${svelte_build};"
+CSVLINE+="${svelte_kit_build};"
+CSVLINE+="${react_build};"
+CSVLINE+="${react_next_build};"
+CSVLINE+="${vue_build};"
+CSVLINE+="${vue_nuxt_build};"
+
+CSVLINE+="${svelte_build_size};"
+CSVLINE+="${svelte_kit_build_size};"
+CSVLINE+="${react_build_size};"
+CSVLINE+="${react_next_build_size};"
+CSVLINE+="${vue_build_size};"
+CSVLINE+="${vue_nuxt_build_size};"
+
+echo "${CSVLINE::-1}" >> results.csv

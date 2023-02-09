@@ -21,10 +21,10 @@ set arrow from 13, graph 0 to 13, graph 1 nohead
 set datafile separator ';'
 datafile = 'results.csv'
 
-plot for [i=1:12] datafile using (posX(i)):i:xticlabel(1) with linespoints pointtype 1 pointsize 2, \
+plot for [i=1:12] datafile using (posX(i)):i:xticlabel($0) with linespoints pointtype 1 pointsize 2, \
     for [i=13:18] datafile using (posX(i+1)):i with filledcurves y=0 lw 4 axis x1y2
 
-set terminal png
+set terminal png size 1100,700
 set output 'output.png'
 
 replot

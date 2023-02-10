@@ -4,6 +4,7 @@ set datafile separator ';'
 datafile = 'results.csv'
 firstrow = system('head -1 '.datafile)
 
+set key autotitle columnhead
 unset key
 
 set bmargin 8
@@ -32,7 +33,14 @@ set arrow from 13, graph 0 to 13, graph 1 nohead
 set boxwidth 0.8
 set style fill solid
 
+do for [i=1:18] {
+ stats datafile using i name sprintf("stat_%d", i) nooutput
+}
+
+means(x) = eval "stat_".x."_mean"
+
 plot for [i=1:12] datafile using (posX(i)):i:xticlabel(func(i)) with linespoints pointtype 1 pointsize 2, \
+    for [i=1:12] datafile using (posX(i)):(means(i)) with points pointtype 1 pointsize 5, \
     for [i=13:18] datafile using (posX(i+1)):i:xticlabel(func(i)) with boxes axis x1y2
 
 set terminal png size 1100,700

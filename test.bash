@@ -70,12 +70,12 @@ info " > Vue Build"         && vue_build=$(${processtime} --format=ms -- ${yarn}
 info " > Vue Nuxt Build"    && vue_nuxt_build=$(${processtime} --format=ms -- ${yarn} --cwd=vue-nuxt generate 2>&1 | tail -1) && ok
 
 info "Gathering complete build size..." && printf "\n"
-info " > Svelte Build Size"      && svelte_build_size=$($(du) -s svelte/dist/ | awk '{print $1}') && ok
-info " > Svelte Kit Build Size"  && svelte_kit_build_size=$($(du) -s svelte-kit/build/ | awk '{print $1}') && ok
-info " > React Build Size"       && react_build_size=$($(du) -s react/build/ | awk '{print $1}') && ok
-info " > React Next Build Size"  && react_next_build_size=$($(du) -s react-next/out/ | awk '{print $1}') && ok
-info " > Vue Build Size"         && vue_build_size=$($(du) -s vue/dist/ | awk '{print $1}') && ok
-info " > Vue Nuxt Build Size"    && vue_nuxt_build_size=$($(du) -s vue-nuxt/dist/ | awk '{print $1}') && ok
+info " > Svelte Build Size"      && svelte_build_size=$(${du} -s svelte/dist/ | awk '{print $1}') && ok
+info " > Svelte Kit Build Size"  && svelte_kit_build_size=$(${du} -s svelte-kit/build/ | awk '{print $1}') && ok
+info " > React Build Size"       && react_build_size=$(${du} -s react/build/ | awk '{print $1}') && ok
+info " > React Next Build Size"  && react_next_build_size=$(${du} -s react-next/out/ | awk '{print $1}') && ok
+info " > Vue Build Size"         && vue_build_size=$(${du} -s vue/dist/ | awk '{print $1}') && ok
+info " > Vue Nuxt Build Size"    && vue_nuxt_build_size=$(${du} -s vue-nuxt/dist/ | awk '{print $1}') && ok
 
 info "Results for node dependencies:" && printf "\n"
 echo " ➡ svelte yarn install:       ${svelte_yarn} ms"

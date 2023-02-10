@@ -41,7 +41,12 @@ rm -rf \
 ok
 
 info "Making sure processtime is installed..."
-cargo install processtime >/dev/null 2>&1
+if ! command -v processtime &> /dev/null
+then
+    echo "processtime could not be found"
+    echo "Install it with \"cargo install processtime\"."
+    exit 1
+fi
 ok
 
 info "Installing node dependencies..." && printf "\n"

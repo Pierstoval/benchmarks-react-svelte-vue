@@ -8,8 +8,8 @@ set key autotitle columnhead
 unset key
 
 set bmargin 8
-set xtics 1 scale 0 rotate by -45
-set xrange [0:20]
+set xtics 1 scale 1 rotate by -45
+set xrange [0.5:19.5]
 set xlabel "Commands"
 set ylabel "Execution time"
 set y2label "Build size"
@@ -25,12 +25,14 @@ set yrange [0:29000]
 set y2range [0:966.66666]
 
 # Plots separator
-set arrow from 13, graph 0 to 13, graph 1 nohead
-set arrow from 2.5, graph -0.01 to 2.5, graph 1 lc rgb("#dddddd") nohead
-set arrow from 4.5, graph -0.01 to 4.5, graph 1 lc rgb("#dddddd") nohead
-set arrow from 6.5, graph -0.01 to 6.5, graph 1 lc rgb("#dddddd") nohead
-set arrow from 8.5, graph -0.01 to 8.5, graph 1 lc rgb("#dddddd") nohead
-set arrow from 10.5, graph -0.01 to 10.5, graph 1 lc rgb("#dddddd") nohead
+set arrow from 2.5, graph 0 to 2.5, graph 1 lc rgb("#cccccc") nohead
+set arrow from 4.5, graph 0 to 4.5, graph 1 lc rgb("#cccccc") nohead
+set arrow from 6.5, graph 0 to 6.5, graph 1 lc rgb("#cccccc") nohead
+set arrow from 8.5, graph 0 to 8.5, graph 1 lc rgb("#cccccc") nohead
+set arrow from 10.5, graph 0 to 10.5, graph 1 lc rgb("#cccccc") nohead
+set arrow from 12.56, graph 0 to 12.56, graph 1 lc rgb("#cccccc") nohead
+set arrow from 13.5*1.1, graph 0 to 13.5*1.1, graph 1 lc rgb("#cccccc") nohead
+set arrow from 15.5*1.1, graph 0 to 15.5*1.1, graph 1 lc rgb("#cccccc") nohead
 
 set boxwidth 0.8
 set style fill solid
@@ -54,7 +56,7 @@ xLabel(x) = system(sprintf('cat '.datafile.' | head -1 | cut -d ";" -f%d', x))
 
 plot for [i=1:12] datafile using (posX(i)):i:xticlabel(xLabel(i)) with linespoints pointtype 1 pointsize 0.75 lc rgb mainColor(i), \
     for [i=1:12] datafile using (posX(i)):(means(i)) with points pointtype 4 pointsize 3 lw 2 lc rgb meanColor(i), \
-    for [i=13:18] datafile using (posX(i+1)):i:xticlabel(xLabel(i)) with boxes axis x1y2 lc rgb mainColor(i)
+    for [i=13:18] datafile using (posX((i-1)*1.1)):i:xticlabel(xLabel(i)) with boxes axis x1y2 lc rgb mainColor(i)
 
 set terminal png size 1100,700
 set output 'output.png'

@@ -7,6 +7,16 @@ This is repo contains some tools to benchmark how Svelte, React and Vue can comp
 * Build time
 * Build size
 
+## How it works
+
+First, we need to have the same application for all three frameworks.
+
+Then, these applications are integrated in both their "classic" and "fullstack" toolset. For instance, React is used for a classic app and a Next.js app. Same for Svelte and SvelteKit, and as well for Vue.js and Nuxt.
+
+This has some "opinionated" ways to be compared, because for instance with Svelte you have native stores, whereas with Vue you don't and have to use either the `reactive` tools or the Vuex library.
+
+I deliberately chose to not use external libraries to compare the frameworks in their lightest forms and avoid adding biases based on the fact that other libraries are used.
+
 ## Current results
 
 This graph was generated using the [gnuplot](http://www.gnuplot.info/) tool, you can check this project's [graph.gnuplot](./graph.gnuplot) file to see how it was generated.

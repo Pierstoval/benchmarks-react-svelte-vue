@@ -8,7 +8,7 @@ set key autotitle columnhead
 unset key
 
 set bmargin 8
-set xtics 1 scale 1 rotate by -45
+set xtics 1 scale 1 rotate by -33 offset -0.1
 set xrange [0.5:19.5]
 set xlabel "Commands"
 set ylabel "Execution time"

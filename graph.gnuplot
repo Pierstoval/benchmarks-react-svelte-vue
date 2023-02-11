@@ -8,7 +8,7 @@ set key autotitle columnhead
 unset key
 
 set bmargin 8
-set xtics 1 scale 1 rotate by -33 offset -0.1
+set xtics 1 scale 1 rotate by -33 offset -0.1 nomirror
 set xrange [0.5:19.5]
 set xlabel "Commands"
 set ylabel "Execution time"
@@ -25,14 +25,18 @@ set yrange [0:29000]
 set y2range [0:966.66666]
 
 # Plots separator
-set arrow from 2.5, graph 0 to 2.5, graph 1 lc rgb("#cccccc") nohead
-set arrow from 4.5, graph 0 to 4.5, graph 1 lc rgb("#cccccc") nohead
-set arrow from 6.5, graph 0 to 6.5, graph 1 lc rgb("#cccccc") nohead
-set arrow from 8.5, graph 0 to 8.5, graph 1 lc rgb("#cccccc") nohead
-set arrow from 10.5, graph 0 to 10.5, graph 1 lc rgb("#cccccc") nohead
-set arrow from 12.56, graph 0 to 12.56, graph 1 lc rgb("#cccccc") nohead
-set arrow from 13.5*1.1, graph 0 to 13.5*1.1, graph 1 lc rgb("#cccccc") nohead
-set arrow from 15.5*1.1, graph 0 to 15.5*1.1, graph 1 lc rgb("#cccccc") nohead
+set arrow from 2.5, graph 0 to 2.5, graph 0.93 lc rgb("#cccccc") nohead
+set arrow from 4.5, graph 0 to 4.5, graph 0.93 lc rgb("#cccccc") nohead
+set arrow from 6.5, graph 0 to 6.5, graph 1 lc rgb("#555555") nohead
+set arrow from 8.5, graph 0 to 8.5, graph 0.93 lc rgb("#cccccc") nohead
+set arrow from 10.5, graph 0 to 10.5, graph 0.93 lc rgb("#cccccc") nohead
+set arrow from 12.56, graph 0 to 12.56, graph 1 lc rgb("#555555") nohead
+set arrow from 13.5*1.1, graph 0 to 13.5*1.1, graph 0.93 lc rgb("#cccccc") nohead
+set arrow from 15.5*1.1, graph 0 to 15.5*1.1, graph 0.93 lc rgb("#cccccc") nohead
+
+set label "Yarn install" at 3.5,27600 font ",20pt" center
+set label "Yarn build" at 9.5,27600 font ",20pt" center
+set label "Build size" at 16,27600 font ",20pt" center
 
 set boxwidth 0.8
 set style fill solid
@@ -62,5 +66,3 @@ set terminal png size 1100,700
 set output 'output.png'
 
 replot
-
-exit

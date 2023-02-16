@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from 'react'
-import { getBaseValue, saveValue, TodoContext } from "./store/TodoContext";
+import { getBaseValue, saveValue, type Todo, TodoContext } from "./store/TodoContext";
 import './App.css'
 
 function App() {
   const [newTodo, setNewTodo] = useState('');
-  const [todos, setTodos] = useState<string[]>(getBaseValue);
+  const [todos, setTodos] = useState<Todo[]>(getBaseValue);
 
   useEffect(() => {
     saveValue(todos);
   }, [todos]);
 
   const add = () => {
-    setTodos([newTodo, ...todos]);
+    setTodos([{text: newTodo}, ...todos]);
     setNewTodo('');
   }
 
-  const remove = (todo: string) => {
-    setTodos(todos.filter((t: string) => t !== todo));
+  const remove = (todo: Todo) => {
+    setTodos(todos.filter((t: Todo) => t !== todo));
   }
 
   return (
@@ -28,7 +28,7 @@ function App() {
         <ul>
           {todos.map((todo, index) => (
             <div key={index} className="todo__item">
-              <p>{todo}</p>
+              <p>{todo.text}</p>
               <button onClick={() => remove(todo)}>X</button>
             </div>
           ))}

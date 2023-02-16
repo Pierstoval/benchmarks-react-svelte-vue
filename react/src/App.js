@@ -11,7 +11,7 @@ function App() {
   }, [todos]);
 
   const add = () => {
-    setTodos([newTodo, ...todos]);
+    setTodos([{text: newTodo}, ...todos]);
     setNewTodo('');
   }
 
@@ -27,7 +27,7 @@ function App() {
       <ul>
         {todos.map((todo, index) => (
           <div key={index} className="todo__item">
-            <p>{todo}</p>
+            <p>{todo.text}</p>
             <button onClick={() => remove(todo)}>X</button>
           </div>
         ))}

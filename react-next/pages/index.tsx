@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import { getBaseValue, saveValue, TodoContext } from "../src/store/TodoContext";
+import { getBaseValue, saveValue, type Todo, TodoContext } from "../src/store/TodoContext";
 import styles from '../styles/Home.module.css';
 
 const Home: NextPage = () => {
   const [newTodo, setNewTodo] = useState('');
-  const [todos, setTodos] = useState<string[]>(getBaseValue);
+  const [todos, setTodos] = useState<Todo[]>(getBaseValue);
 
   useEffect(() => {
     saveValue(todos);
   }, [todos]);
 
   const add = () => {
-    setTodos([newTodo, ...todos]);
+    setTodos([{text: newTodo}, ...todos]);
     setNewTodo('');
   }
 
-  const remove = (todo: string) => {
-    setTodos(todos.filter((t: string) => t !== todo));
+  const remove = (todo: Todo) => {
+    setTodos(todos.filter((t: Todo) => t !== todo));
   }
 
   return (
@@ -36,7 +36,7 @@ const Home: NextPage = () => {
         <ul>
           {todos.map((todo, index) => (
             <div key={index} className="todo__item">
-              <p>{todo}</p>
+              <p>{todo.text}</p>
               <button onClick={() => remove(todo)}>X</button>
             </div>
           ))}

@@ -29,7 +29,7 @@ body {
   min-height: 100vh;
 }
 
-#root {
+#app {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
@@ -53,17 +53,4 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
-
-input {
-  padding: .6em;
-  border-radius: 8px;
-  margin: auto 10px;
-}
-
-.todo__item {
-  display: flex;
-  justify-content: space-between;
-  margin: 10px auto;
-  width: 50%;
 }

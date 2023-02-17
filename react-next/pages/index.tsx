@@ -1,24 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import { getBaseValue, saveValue, type Todo, TodoContext } from "../src/store/TodoContext";
-import styles from '../styles/Home.module.css';
+import { getBaseValue, saveValue, TodoContext } from "../src/store/TodoContext";
 
 const Home: NextPage = () => {
   const [newTodo, setNewTodo] = useState('');
-  const [todos, setTodos] = useState<Todo[]>(getBaseValue);
+  const [todos, setTodos] = useState<Array<{ text: string }>>(getBaseValue);
 
   useEffect(() => {
     saveValue(todos);
   }, [todos]);
 
-  const add = () => {
+  function addTodo () {
     setTodos([{text: newTodo}, ...todos]);
     setNewTodo('');
   }
 
-  const remove = (todo: Todo) => {
-    setTodos(todos.filter((t: Todo) => t !== todo));
+  function removeTodo (todo: { text: string }) {
+    setTodos(todos.filter((t: { text: string }) => t !== todo));
   }
 
   return (
@@ -29,19 +28,19 @@ const Home: NextPage = () => {
         <link rel="icon" href="/vite.svg" />
       </Head>
 
-      <main className={styles.container}>
+      <div id="app">
         <input type="text" value={newTodo} onChange={({target}) => setNewTodo(target.value)} placeholder="Add a new element"/>
-        <button type="button" disabled={newTodo.length === 0} onClick={add}>Add</button>
+        <button type="button" disabled={newTodo.length === 0} onClick={addTodo}>Add</button>
 
         <ul>
           {todos.map((todo, index) => (
-            <div key={index} className="todo__item">
-              <p>{todo.text}</p>
-              <button onClick={() => remove(todo)}>X</button>
-            </div>
+            <li key={index}>
+              {todo.text}
+              <button onClick={() => removeTodo(todo)}>X</button>
+            </li>
           ))}
         </ul>
-      </main>
+      </div>
     </TodoContext.Provider>
   );
 }

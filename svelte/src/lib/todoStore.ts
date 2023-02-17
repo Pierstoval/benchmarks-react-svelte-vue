@@ -2,7 +2,7 @@ import {writable} from "svelte/store";
 
 const storageKey = 'todoStore';
 
-function getBaseValue() {
+function getBaseValue(): Array<{ text: string }> {
     let value = '[]';
     if (typeof window !== 'undefined') {
         value = window?.localStorage?.getItem(storageKey) || '[]';

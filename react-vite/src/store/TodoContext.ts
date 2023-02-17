@@ -2,19 +2,15 @@ import React from "react";
 
 const storageKey = 'todoStore';
 
-export interface Todo {
-  text: string;
-}
-
-export function getBaseValue(): Todo[] {
+export function getBaseValue(): Array<{ text: string }> {
   let value = '[]';
   if (typeof window !== 'undefined') {
-    value = window?.localStorage?.getItem(storageKey) || '[]';
+    value = window.localStorage.getItem(storageKey) || '[]';
   }
   return JSON.parse(value);
 }
 
-export function saveValue(values: Todo[]) {
+export function saveValue(values: Array<{ text: string }>) {
   if (typeof window === 'undefined') {
     console.warn('Window variable is undefined, cannot save values.');
     return;

@@ -10,29 +10,31 @@ function App() {
     saveValue(todos);
   }, [todos]);
 
-  const add = () => {
+  function addTodo () {
     setTodos([{text: newTodo}, ...todos]);
     setNewTodo('');
   }
 
-  const remove = (todo) => {
+  function removeTodo (todo) {
     setTodos(todos.filter(t => t !== todo));
   }
 
   return (
-    <TodoContext.Provider value={[todos, setTodos]}>
-      <input type="text" value={newTodo} onChange={({target}) => setNewTodo(target.value)} placeholder="Add a new element"/>
-      <button type="button" disabled={newTodo.length === 0} onClick={add}>Add</button>
+      <div id="app">
+          <TodoContext.Provider value={[todos, setTodos]}>
+              <input type="text" value={newTodo} onChange={({target}) => setNewTodo(target.value)} placeholder="Add a new element"/>
+              <button type="button" disabled={newTodo.length === 0} onClick={addTodo}>Add</button>
 
-      <ul>
-        {todos.map((todo, index) => (
-          <div key={index} className="todo__item">
-            <p>{todo.text}</p>
-            <button onClick={() => remove(todo)}>X</button>
-          </div>
-        ))}
-      </ul>
-    </TodoContext.Provider>
+              <ul>
+                  {todos.map((todo, index) => (
+                      <li key={index}>
+                          {todo.text}
+                          <button onClick={() => removeTodo(todo)}>X</button>
+                      </li>
+                  ))}
+              </ul>
+          </TodoContext.Provider>
+      </div>
   );
 }
 

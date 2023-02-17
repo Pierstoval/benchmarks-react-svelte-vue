@@ -1,41 +1,41 @@
-import React, { useEffect, useState } from 'react'
-import { getBaseValue, saveValue, type Todo, TodoContext } from "./store/TodoContext";
-import './App.css'
+import React, {useEffect, useState} from 'react'
+import {getBaseValue, saveValue, TodoContext} from "./store/TodoContext";
 
 function App() {
-  const [newTodo, setNewTodo] = useState('');
-  const [todos, setTodos] = useState<Todo[]>(getBaseValue);
+    const [newTodo, setNewTodo] = useState('');
+    const [todos, setTodos] = useState<Array<{ text: string }>>(getBaseValue);
 
-  useEffect(() => {
-    saveValue(todos);
-  }, [todos]);
+    useEffect(() => {
+        saveValue(todos);
+    }, [todos]);
 
-  const add = () => {
-    setTodos([{text: newTodo}, ...todos]);
-    setNewTodo('');
-  }
+    function addTodo () {
+        setTodos([{text: newTodo}, ...todos]);
+        setNewTodo('');
+    }
 
-  const remove = (todo: Todo) => {
-    setTodos(todos.filter((t: Todo) => t !== todo));
-  }
+    function removeTodo (todo: { text: string }) {
+        setTodos(todos.filter((t: { text: string }) => t !== todo));
+    }
 
-  return (
-    <TodoContext.Provider value={[todos, setTodos] as any}>
-      <div className="App">
-        <input type="text" value={newTodo} onChange={({target}) => setNewTodo(target.value)} placeholder="Add a new element"/>
-        <button type="button" disabled={newTodo.length === 0} onClick={add}>Add</button>
+    return (
+        <div id="app">
+            <TodoContext.Provider value={[todos, setTodos] as any}>
+                <input type="text" value={newTodo} onChange={({target}) => setNewTodo(target.value)}
+                       placeholder="Add a new element"/>
+                <button type="button" disabled={newTodo.length === 0} onClick={addTodo}>Add</button>
 
-        <ul>
-          {todos.map((todo, index) => (
-            <div key={index} className="todo__item">
-              <p>{todo.text}</p>
-              <button onClick={() => remove(todo)}>X</button>
-            </div>
-          ))}
-        </ul>
-      </div>
-    </TodoContext.Provider>
-  )
+                <ul>
+                    {todos.map((todo, index) => (
+                        <li key={index}>
+                            {todo.text}
+                            <button onClick={() => removeTodo(todo)}>X</button>
+                        </li>
+                    ))}
+                </ul>
+            </TodoContext.Provider>
+        </div>
+    )
 }
 
 export default App

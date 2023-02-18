@@ -1,13 +1,13 @@
-# Functions
-    colorRatio = 1
-    perc(i)=(((7%(i-1))+1*3)/21)
-    mainColor(i)=hsv2rgb(perc(i), 1, 1)
-    meanColor(i)=hsv2rgb(perc(i), 0.75, 1)
-    xLabel(x) = system(sprintf('cat '.datafile.' | head -1 | cut -d ";" -f%d', x))
-    xPosition(n) = n
-
 set datafile separator ';'
 datafile = 'results.csv'
+
+# Functions
+    colorRatio = 1
+    perc(i)=( ( ( ( (i - 1) % 7 ) + 1) * 3.0 ) / 21.0 )
+    mainColor(i)=hsv2rgb(perc(i), 1, 1)
+    meanColor(i)=hsv2rgb(perc(i), 0.8, 1)
+    xLabel(x) = system(sprintf('cat '.datafile.' | head -1 | cut -d ";" -f%d', x))
+    xPosition(n) = n
 
 # Disables handling of the 1st row in the CSV file
 set key autotitle columnhead
@@ -70,9 +70,9 @@ set title "Benchmarking Svelte, React and Vue" font ",30pt"
     set output 'output.png'
 
 # Actually generate plot.
-#   First command is grouping columns 1 to 12 of the CSV file (install/time/size)
+#   First command is grouping columns 1 to 14 of the CSV file (install/time/size)
 #   Second command is displaying averages/means boxes for more readability
-#   Third is displaying build sizes in columns 13 to 18 as boxes/histograms.
+#   Third is displaying build sizes in columns 15 to 21 as boxes/histograms.
 plot \
     for [i=1:14] datafile using (xPosition(i)):i:xticlabel(xLabel(i)) with linespoints pointtype 1 pointsize 0.75 lc rgb mainColor(i), \
     for [i=1:14] datafile using (xPosition(i)):(plotstats[i]) with points pointtype 4 pointsize 3 lw 2 lc rgb meanColor(i), \

@@ -138,3 +138,9 @@ CSVLINE+="${vue_build_size};"
 CSVLINE+="${vue_nuxt_build_size};"
 
 echo "${CSVLINE::-1}" >> results.csv
+
+info "Processing results into a graph..."
+
+gnuplot graph.gnuplot
+
+ok

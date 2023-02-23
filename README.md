@@ -21,7 +21,7 @@ I deliberately chose to not use external libraries to compare the frameworks in 
 
 This graph was generated using the [gnuplot](http://www.gnuplot.info/) tool, you can check this project's [graph.gnuplot](./graph.gnuplot) file to see how it was generated.
 
-The benchmark ran over 600 tests on the same machine, a small dedicated server, so the most important here is to **not compare time, but proportions instead** (except for build size which is consistent over all platforms).
+The benchmark ran over 2000 tests on the same machine, a small dedicated server, so the most important here is to **not compare time, but proportions instead** (except for build size which is consistent over all platforms).
 
 ---
 

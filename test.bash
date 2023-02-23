@@ -13,6 +13,10 @@ ok() {
     printf " \033[32m%s\033[0m\n" "Done!"
 }
 
+info "Retrieving CSV headers..."
+cat results.csv | head -1 | tee headers.csv
+ok
+
 info "Cleaning up..."
 rm -rf \
     \

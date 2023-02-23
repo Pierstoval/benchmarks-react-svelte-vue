@@ -14,7 +14,7 @@ ok() {
 }
 
 info "Retrieving CSV headers..."
-cat results.csv | head -1 | tee headers.csv
+cat results.csv | head -1 > headers.csv
 ok
 
 info "Cleaning up..."

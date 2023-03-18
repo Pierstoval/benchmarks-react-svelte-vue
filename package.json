@@ -1,0 +1,24 @@
+{
+  "name": "benchmarks-react-svelte-vue",
+  "version": "1.0.0",
+  "description": "Svelte vs React vs Vue ======================",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pierstoval/helloworlds-react-svelte.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pierstoval/helloworlds-react-svelte/issues"
+  },
+  "homepage": "https://github.com/Pierstoval/helloworlds-react-svelte#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.31.2"
+  }
+}

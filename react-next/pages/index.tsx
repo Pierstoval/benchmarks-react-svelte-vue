@@ -12,7 +12,7 @@ const Home: NextPage = () => {
   }, [todos]);
 
   function addTodo () {
-    setTodos([{text: newTodo}, ...todos]);
+    setTodos([...todos, {text: newTodo}]);
     setNewTodo('');
   }
 
@@ -36,7 +36,7 @@ const Home: NextPage = () => {
           {todos.map((todo, index) => (
             <li key={index}>
               {todo.text}
-              <button onClick={() => removeTodo(todo)}>X</button>
+              <button onClick={() => removeTodo(todo)}>x</button>
             </li>
           ))}
         </ul>

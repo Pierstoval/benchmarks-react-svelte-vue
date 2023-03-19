@@ -3,13 +3,13 @@ const { defineConfig, devices } = require('@playwright/test');
 
 
 const apps = [
-  { port: 3000, appName: 'svelte', path: 'svelte/dist/' },
-  { port: 3001, appName: 'svelte-kit', path: 'svelte-kit/build/' },
-  { port: 3002, appName: 'react', path: 'react/build/' },
-  { port: 3003, appName: 'react-vite', path: 'react-vite/dist/' },
-  { port: 3004, appName: 'react-next', path: 'react-next/out/' },
-  { port: 3005, appName: 'vue', path: 'vue/dist/' },
-  { port: 3006, appName: 'vue-nuxt', path: 'vue-nuxt/dist/' },
+  { port: 13000, appName: 'svelte', path: 'svelte/dist/' },
+  { port: 13001, appName: 'svelte-kit', path: 'svelte-kit/build/' },
+  { port: 13002, appName: 'react', path: 'react/build/' },
+  { port: 13003, appName: 'react-vite', path: 'react-vite/dist/' },
+  { port: 13004, appName: 'react-next', path: 'react-next/out/' },
+  { port: 13005, appName: 'vue', path: 'vue/dist/' },
+  { port: 13006, appName: 'vue-nuxt', path: 'vue-nuxt/dist/' },
 ]
 
 const browsers = [

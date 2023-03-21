@@ -58,7 +58,7 @@ set multiplot
     set ytics 5000 nomirror
     set yrange [0:30000]
     set grid ytics
-    set title "Yarn install execution time" font ",24pt" center
+    set title "Yarn install execution time (smaller is better)" font ",24pt" center
     plot for [i=1:7] datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb mainColor(i), \
         for [i=1:7] datafile using (xPosition(i)):(plotstats[i]) with points pointtype 4 pointsize 3 lw 2 lc rgb meanColor(i)
 
@@ -74,7 +74,7 @@ set multiplot
     set ytics 5000 nomirror
     set yrange [0:25000]
     set grid ytics
-    set title "Yarn build execution time" font ",24pt" center
+    set title "Yarn build execution time (smaller is better)" font ",24pt" center
     plot for [i=8:14] datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb mainColor(i), \
         for [i=8:14] datafile using (xPosition(i)):(plotstats[i]) with points pointtype 4 pointsize 3 lw 2 lc rgb meanColor(i)
 
@@ -87,7 +87,7 @@ set multiplot
     set yrange [0:700]
     set format y "% g KB"
     set lmargin at screen 0.087
-    set title "Final build size" font ",24pt" center
+    set title "Final build size (smaller is better)" font ",24pt" center
     plot for [i=15:21] datafile using (xPosition((i))):i with boxes lc rgb mainColor(i)
 
 # --- Runtime performances
@@ -105,7 +105,7 @@ set multiplot
     do for [i=1:7] {
         set arrow from (i*3)+0.5, graph 0 to (i*3)+0.5, graph 1 lc rgb("#000") lw 2 nohead
     }
-    set title "Runtime execution tests" font ",24pt" center
+    set title "Runtime execution tests (smaller is better)" font ",24pt" center
 
     # Browsers
     set label "■ Chromium" at 5,13300 font "Arial,20pt" center tc rgb runtimeColor(1)

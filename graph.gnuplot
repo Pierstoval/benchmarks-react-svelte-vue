@@ -39,7 +39,7 @@ unset key
 
 # Save as PNG
     set terminal png size 1200,1400
-    set output 'output.png'
+    set output output_file
 
 set label "Benchmarking Svelte, React and Vue" font ",35pt" at screen 0.5,0.972 center front
 

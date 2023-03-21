@@ -18,7 +18,7 @@ cd "$CWD"
 
 info "Processing results into a graph..."
 
-gnuplot "${CWD}/graph.gnuplot"
+gnuplot -e "output_file=${OUTPUT_FILE}" "${CWD}/graph.gnuplot"
 
 ok
 

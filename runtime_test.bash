@@ -71,3 +71,9 @@ info "Adding execution times to $(realpath results_runtime.csv) file"
 echo "$csvLine" >> results_runtime.csv
 
 ok
+
+info "Processing results into a graph..."
+
+gnuplot graph.gnuplot
+
+ok

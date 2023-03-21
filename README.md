@@ -9,9 +9,9 @@ This is repo contains some tools to benchmark how Svelte, React and Vue can comp
 
 ## How it works
 
-First, we need to have the same application for all three frameworks.
+First, we have the same application for all three frameworks and their variants. A small "todo list" app.
 
-Then, these applications are integrated in both their "classic" and "fullstack" toolset. For instance, React is used for a classic app and a Next.js app. Same for Svelte and SvelteKit, and as well for Vue.js and Nuxt.
+These applications are integrated in both their "classic" and "fullstack" toolset. For instance, React is used for a classic app and a Next.js app. Same for Svelte and SvelteKit, and as well for Vue.js and Nuxt.
 
 This has some "opinionated" ways to be compared, because for instance with Svelte you have native stores, whereas with Vue you don't and have to use either the `reactive` tools or the Vuex library.
 
@@ -21,7 +21,7 @@ I deliberately chose to not use external libraries to compare the frameworks in 
 
 This graph was generated using the [gnuplot](http://www.gnuplot.info/) tool, you can check this project's [graph.gnuplot](./graph.gnuplot) file to see how it was generated.
 
-The benchmark ran over 2000 tests on the same machine, a small dedicated server, so the most important here is to **not compare time, but proportions instead** (except for build size which is consistent over all platforms).
+The benchmark is roughly a thousands of build tests and hundreds of runtime tests ran on the same machine, a small dedicated server, so the most important here is to **not compare time, but proportions instead** (except for build size which is consistent over all platforms, hence the simple bar chart).
 
 ---
 
@@ -36,23 +36,32 @@ You need several tools:
 * [processtime](https://crates.io/crates/processtime), a very small binary that calculates execution time with a computer-usable output.<br>You can quickly install it by [installing the Rust langauge](https://www.rust-lang.org/fr) and running `cargo install processtime`.
 * [gnuplot](http://www.gnuplot.info/), which is available in most linux platforms via your favourite package manager.
 * [Node.js](http://nodejs.org/) and the [yarn](https://yarnpkg.com/) package manager.
+* Set up [Playwright](https://playwright.dev/) (see below), for runtime performance benchmark.
 * The `du` tool, which is built-in on most linux/unix platforms.
 
+### Set up Playwright
+
+To set it up, run these commands:
+
+```bash
+yarn
+yarn playwright install-deps # This one will ask for "sudo" permissions
+yarn playwright install
+```
 
 ### Generation process
 
-To generate **one** benchmark, run `./test.bash`.
+There are **two scripts** depending on the benchmark you're looking for.
 
-This will clean everything up and execute all script commands procedurally **one by one** so that process time is consistent and no other running process might interfere with performances.
+1. The `./test.bash` script runs a `build` test. It cleans up directories, installs Node.js dependencies via Yarn, and builds the apps as a static web application, and output the results to the `results.csv` file.
+2. The `./runtime_test.bash` script runs a `runtime` test. It makes sure apps are built as static sites, build them if they're not, use `playwright` to start a web server for each app, run the benchmarks, and output the results to the `results_runtime.csv` file. 
 
-The data results will then be appended to the `results.csv` file.
+If you reproduce, I recommend you to clean the CSV files so that your data is more consistent. We cannot really use the data from different sources, as performance might be really different.
 
-> Note: remember to **keep the first line** of the CSV file. It serves as headers for the graphs.
+> Note: remember to **keep the first line** of the CSV files. It serves as headers for the graphs.
 
 Next, once you have enough data in your set, run the `gnuplot graph.gnuplot` command.
 
-Depending on the size of your data set, it might take some time, so please be patient 😉.
-
-With 600+ lines, on my machine, it takes about 20 seconds to generate.
+Depending on the size of your data set, generating the graph might take some time, so please be patient 😉. On my machine, the whole plotting takes up to 4 seconds, but I have a pretty nice setup, so it all depends on your hardware.
 
 Then, you can enjoy visualizing the results on the `output.png` file!

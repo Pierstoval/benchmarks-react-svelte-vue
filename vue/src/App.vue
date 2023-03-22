@@ -1,7 +1,9 @@
 <script lang="ts">
+    import {defineComponent} from 'vue';
     import {todoStore} from './lib/todoStore';
 
-    export default {
+    export default defineComponent({
+      name: 'App',
       data() {
         return {
           todoStore,
@@ -15,13 +17,13 @@
           }
           todoStore.update((todos: Array<{ text: string }>) => [...todos, {text: this.newTodo}])
           this.newTodo = '';
-          this.$refs.input.focus();
+          (this.$refs.input as HTMLInputElement).focus();
         },
         removeTodo(todo: { text: string }) {
           todoStore.update((todos: Array<{ text: string }>) => todos.filter(i => i !== todo));
         },
       },
-    };
+    });
 </script>
 
 <template>

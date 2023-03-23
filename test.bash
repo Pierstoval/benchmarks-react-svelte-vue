@@ -68,8 +68,8 @@ info " > Svelte Kit Yarn"  && svelte_kit_yarn=$(${processtime} --format=ms -- ${
 info " > React Yarn"       && react_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=react | tail -1) && ok
 info " > React Vite Yarn"  && react_vite_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=react-vite | tail -1) && ok
 info " > React Next Yarn"  && react_next_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=react-next | tail -1) && ok
-info " > Vue Yarn"         && vue_yarn=$(${processtime} --format=ms -- ${yarn} --cwd=vue | tail -1) && ok
-info " > Vue Nuxt Yarn"    && vue_nuxt_yarn=$(${processtime} --format=ms -- ${yarn} --cwd=vue-nuxt | tail -1) && ok
+info " > Vue Yarn"         && vue_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=vue | tail -1) && ok
+info " > Vue Nuxt Yarn"    && vue_nuxt_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=vue-nuxt | tail -1) && ok
 
 info "Building projects as static websites..." && printf "\n"
 info " > Svelte Build"      && svelte_build=$(${processtime} --format=ms -- ${yarn} --cwd=svelte build | tail -1) && ok
@@ -142,4 +142,3 @@ CSVLINE+="${vue_build_size};"
 CSVLINE+="${vue_nuxt_build_size};"
 
 echo "${CSVLINE::-1}" >> results.csv
-

@@ -24,7 +24,7 @@ const finalProjects = [];
 apps.forEach(({port, appName, path}) => {
   webservers.push({
     port,
-    command: `npx http-server -p ${port} ${path}`,
+    command: `npx http-server -p ${port} ${__dirname}/${path}`,
     timeout: 10 * 1000,
     reuseExistingServer: !process.env.CI,
   });
@@ -55,7 +55,7 @@ module.exports = defineConfig({
   testDir: './tests',
   quiet: !process.env.CI,
   /* Maximum time one test can run for. */
-  timeout: 120 * 1000,
+  timeout: 30 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -72,7 +72,7 @@ module.exports = defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-      ['dot'],
+      ['line'],
       ['html', {open: 'never'}],
       ['json', {outputFile: 'playwright-report/report.json'}]
   ],
@@ -133,4 +133,3 @@ module.exports = defineConfig({
   // },
   webServer: webservers,
 });
-

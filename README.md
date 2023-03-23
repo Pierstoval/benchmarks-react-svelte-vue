@@ -37,6 +37,7 @@ You need several tools:
 * [gnuplot](http://www.gnuplot.info/), which is available in most linux platforms via your favourite package manager.
 * [Node.js](http://nodejs.org/) and the [yarn](https://yarnpkg.com/) package manager.
 * Set up [Playwright](https://playwright.dev/) (see below), for runtime performance benchmark.
+* [jq](https://stedolan.github.io/jq/), to gather Playwright results that are stored in JSON.
 * The `du` tool, which is built-in on most linux/unix platforms.
 
 ### Set up Playwright

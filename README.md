@@ -33,8 +33,12 @@ Pictured results:
         <th>Results</th>
     </tr>
     <tr>
-        <td>A</td><td>![](./output/dedi.png)</td>
-        <td>B</td><td>![](./output/vps.png)</td>
+        <td>A</td>
+        <td> ![](./output/dedi.png) </td>
+    </tr>
+    <tr>
+        <td>B</td>
+        <td> ![](./output/vps.png) </td>
     </tr>
 </table>
 

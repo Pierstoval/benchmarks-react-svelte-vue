@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 
-set -eu
-
-CWD=$(realpath $(dirname ${BASH_SOURCE[0]}))
+CWD=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 
 cd "$CWD"
 
 info() {
     printf " %s" "$1"
 }
+err() {
+    printf " \033[31m[ERROR]\033[0m %s\n" "$1"
+}
 ok() {
     printf " \033[32m%s\033[0m\n" "Done!"
 }
 
-info "Retrieving CSV headers..."
-cat results.csv | head -1 > headers.csv
-ok
+if [[ -z "${OUTPUT_FILE}" ]]; then
+    err "Please specify the OUTPUT_FILE env var before running the test suite."
+    exit 1
+fi
+
+set -eu
 
 info "Cleaning up..."
 rm -rf \
@@ -63,22 +67,22 @@ yarn=$(which yarn)
 du=$(which du)
 
 info "Installing node dependencies..." && printf "\n"
-info " > Svelte Yarn"      && svelte_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=svelte | tail -1) && ok
-info " > Svelte Kit Yarn"  && svelte_kit_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=svelte-kit | tail -1) && ok
-info " > React Yarn"       && react_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=react | tail -1) && ok
-info " > React Vite Yarn"  && react_vite_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=react-vite | tail -1) && ok
-info " > React Next Yarn"  && react_next_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=react-next | tail -1) && ok
-info " > Vue Yarn"         && vue_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=vue | tail -1) && ok
-info " > Vue Nuxt Yarn"    && vue_nuxt_yarn=$(${processtime} --format=ms -- ${yarn} --frozen-lockfile --cwd=vue-nuxt | tail -1) && ok
+info " > Svelte Yarn"      && svelte_yarn=$(${processtime} --format=ms -- "${yarn}" --frozen-lockfile --cwd=svelte | tail -1) && ok
+info " > Svelte Kit Yarn"  && svelte_kit_yarn=$(${processtime} --format=ms -- "${yarn}" --frozen-lockfile --cwd=svelte-kit | tail -1) && ok
+info " > React Yarn"       && react_yarn=$(${processtime} --format=ms -- "${yarn}" --frozen-lockfile --cwd=react | tail -1) && ok
+info " > React Vite Yarn"  && react_vite_yarn=$(${processtime} --format=ms -- "${yarn}" --frozen-lockfile --cwd=react-vite | tail -1) && ok
+info " > React Next Yarn"  && react_next_yarn=$(${processtime} --format=ms -- "${yarn}" --frozen-lockfile --cwd=react-next | tail -1) && ok
+info " > Vue Yarn"         && vue_yarn=$(${processtime} --format=ms -- "${yarn}" --frozen-lockfile --cwd=vue | tail -1) && ok
+info " > Vue Nuxt Yarn"    && vue_nuxt_yarn=$(${processtime} --format=ms -- "${yarn}" --frozen-lockfile --cwd=vue-nuxt | tail -1) && ok
 
 info "Building projects as static websites..." && printf "\n"
-info " > Svelte Build"      && svelte_build=$(${processtime} --format=ms -- ${yarn} --cwd=svelte build | tail -1) && ok
-info " > Svelte Kit Build"  && svelte_kit_build=$(${processtime} --format=ms -- ${yarn} --cwd=svelte-kit build | tail -1) && ok
-info " > React Build"       && react_build=$(${processtime} --format=ms -- ${yarn} --cwd=react build | tail -1) && ok
-info " > React Vite Build"  && react_vite_build=$(${processtime} --format=ms -- ${yarn} --cwd=react-vite build | tail -1) && ok
-info " > React Next Build"  && react_next_build=$(${processtime} --format=ms -- ${yarn} --cwd=react-next build | tail -1) && ok
-info " > Vue Build"         && vue_build=$(${processtime} --format=ms -- ${yarn} --cwd=vue build | tail -1) && ok
-info " > Vue Nuxt Build"    && vue_nuxt_build=$(${processtime} --format=ms -- ${yarn} --cwd=vue-nuxt generate | tail -1) && ok
+info " > Svelte Build"      && svelte_build=$(${processtime} --format=ms -- "${yarn}" --cwd=svelte build | tail -1) && ok
+info " > Svelte Kit Build"  && svelte_kit_build=$(${processtime} --format=ms -- "${yarn}" --cwd=svelte-kit build | tail -1) && ok
+info " > React Build"       && react_build=$(${processtime} --format=ms -- "${yarn}" --cwd=react build | tail -1) && ok
+info " > React Vite Build"  && react_vite_build=$(${processtime} --format=ms -- "${yarn}" --cwd=react-vite build | tail -1) && ok
+info " > React Next Build"  && react_next_build=$(${processtime} --format=ms -- "${yarn}" --cwd=react-next build | tail -1) && ok
+info " > Vue Build"         && vue_build=$(${processtime} --format=ms -- "${yarn}" --cwd=vue build | tail -1) && ok
+info " > Vue Nuxt Build"    && vue_nuxt_build=$(${processtime} --format=ms -- "${yarn}" --cwd=vue-nuxt generate | tail -1) && ok
 
 info "Gathering complete build size..." && printf "\n"
 info " > Svelte Build Size"      && svelte_build_size=$(${du} -s svelte/dist/ | awk '{print $1}') && ok
@@ -141,4 +145,4 @@ CSVLINE+="${react_next_build_size};"
 CSVLINE+="${vue_build_size};"
 CSVLINE+="${vue_nuxt_build_size};"
 
-echo "${CSVLINE::-1}" >> results.csv
+echo "${CSVLINE::-1}" >> "output/${OUTPUT_FILE}.csv"

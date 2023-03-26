@@ -54,15 +54,17 @@ yarn playwright install
 
 There are **two scripts** depending on the benchmark you're looking for.
 
-1. The `./test.bash` script runs a `build` test. It cleans up directories, installs Node.js dependencies via Yarn, and builds the apps as a static web application, and output the results to the `results.csv` file.
-2. The `./runtime_test.bash` script runs a `runtime` test. It makes sure apps are built as static sites, build them if they're not, use `playwright` to start a web server for each app, run the benchmarks, and output the results to the `results_runtime.csv` file. 
+1. First, create the `OUTPUT_FILE` environment variable, it will determine where your output files will be stored (CSV and plot images).
+2. The `./test.bash` script runs a `build` test. It cleans up directories, installs Node.js dependencies via Yarn, and builds the apps as a static web application, and output the results to the `results.csv` file.
+3. The `./runtime_test.bash` script runs a `runtime` test. It makes sure apps are built as static sites, build them if they're not, use `playwright` to start a web server for each app, run the benchmarks, and output the results to the `results_runtime.csv` file. 
+4. The `./suite.bash` script both `test.bash` and `runtime_test.bash` consecutively. It is a helper to run all tests at once. 
 
-If you reproduce, I recommend you to clean the CSV files so that your data is more consistent. We cannot really use the data from different sources, as performance might be really different.
+If you reproduce, I recommend you to customize the `OUTPUT_FILE` environment variable to something different than the exusting files so that your data is more consistent. We cannot really use the data from different sources, as performance might be really different across platforms.
 
 > Note: remember to **keep the first line** of the CSV files. It serves as headers for the graphs.
 
 Next, once you have enough data in your set, run the `gnuplot graph.gnuplot` command.
 
-Depending on the size of your data set, generating the graph might take some time, so please be patient 😉. On my machine, the whole plotting takes up to 4 seconds, but I have a pretty nice setup, so it all depends on your hardware.
+Depending on the size of your data set, generating the graph might take some time, so please be patient 😉. On my servers, the whole suite takes between 4 and 9 minutes.
 
-Then, you can enjoy visualizing the results on the `output.png` file!
+Then, you can enjoy visualizing the results on the output png file!

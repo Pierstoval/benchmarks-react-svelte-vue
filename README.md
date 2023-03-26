@@ -27,20 +27,9 @@ The benchmark is roughly a thousands of build tests and hundreds of runtime test
 
 Pictured results:
 
-<table>
-    <tr>
-        <th>Server</th>
-        <th>Results</th>
-    </tr>
-    <tr>
-        <td>A</td>
-        <td> ![](./output/dedi.png) </td>
-    </tr>
-    <tr>
-        <td>B</td>
-        <td> ![](./output/vps.png) </td>
-    </tr>
-</table>
+| Server | A | B |
+| --- | --- | --- |
+| Results | ![](./output/dedi.png) | ![](./output/vps.png) |
 
 ## How to reproduce
 

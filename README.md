@@ -59,7 +59,7 @@ There are **two scripts** depending on the benchmark you're looking for.
 1. First, create the `OUTPUT_FILE` environment variable, it will determine where your output files will be stored (CSV and plot images).
 2. The `./test.bash` script runs a `build` test. It cleans up directories, installs Node.js dependencies via Yarn, and builds the apps as a static web application, and output the results to the `results.csv` file.
 3. The `./runtime_test.bash` script runs a `runtime` test. It makes sure apps are built as static sites, build them if they're not, use `playwright` to start a web server for each app, run the benchmarks, and output the results to the `results_runtime.csv` file. 
-4. The `./suite.bash` script both `test.bash` and `runtime_test.bash` consecutively. It is a helper to run all tests at once. 
+4. The `./suite.bash` script runs both `test.bash` and `runtime_test.bash` consecutively. It is a helper to run all tests at once. 
 
 If you reproduce, I recommend you to customize the `OUTPUT_FILE` environment variable to something different than the exusting files so that your data is more consistent. We cannot really use the data from different sources, as performance might be really different across platforms.
 

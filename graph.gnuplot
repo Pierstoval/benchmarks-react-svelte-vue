@@ -1,6 +1,6 @@
 set datafile separator ';'
-datafile = 'results.csv'
-runtime_datafile = 'results_runtime.csv'
+datafile = 'output/'.output_file.'.csv'
+runtime_datafile = 'output/'.output_file.'_runtime.csv'
 
 # Functions
     colorRatio = 1
@@ -10,8 +10,8 @@ runtime_datafile = 'results_runtime.csv'
     rperc(i)=( ( ( ( (i - 1) % 3 ) + 1) * 3.0 ) / 9.0 )
     runtimeColor(i)=hsv2rgb(rperc(i), 1, 1)
     meanRuntimeColor(i)=hsv2rgb(rperc(i), 0.8, 1)
-    xLabel(x) = system(sprintf('head results.csv -n 1 | cut -d ";" -f%d', x))
-    x2Label(x) = system(sprintf('head results_runtime.csv -n 1 | cut -d ";" -f%d | tr "_" " "', x))
+    xLabel(x) = system(sprintf('head headers.csv -n 1 | cut -d ";" -f%d', x))
+    x2Label(x) = system(sprintf('head headers_runtime.csv -n 1 | cut -d ";" -f%d | tr "_" " "', x))
     xPosition(n) = n
 
 # Disables handling of the 1st row in the CSV file
@@ -39,7 +39,7 @@ unset key
 
 # Save as PNG
     set terminal png size 1200,1400
-    set output output_file
+    set output 'output/'.output_file.'.png'
 
 set label "Benchmarking Svelte, React and Vue" font ",35pt" at screen 0.5,0.972 center front
 

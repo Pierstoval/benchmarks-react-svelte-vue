@@ -26,6 +26,6 @@ OUTPUT_FILE=${OUTPUT_FILE} "${CWD}/runtime_test.bash"
 
 info "Processing results into a graph..."
 
-gnuplot -e "output_file=${OUTPUT_FILE}" "${CWD}/graph.gnuplot"
+gnuplot -e "output_file=\"${OUTPUT_FILE}\"" "${CWD}/graph.gnuplot"
 
 ok

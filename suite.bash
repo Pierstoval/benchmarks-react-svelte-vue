@@ -29,3 +29,9 @@ info "Processing results into a graph..."
 gnuplot -e "output_file=\"${OUTPUT_FILE}\"" "${CWD}/graph.gnuplot"
 
 ok
+
+info "Update stats in readme file..."
+
+bash ./update_readme_results.bash
+
+ok

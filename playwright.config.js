@@ -10,6 +10,7 @@ const apps = [
   { port: 13004, appName: 'react-next', path: 'react-next/out/' },
   { port: 13005, appName: 'vue', path: 'vue/dist/' },
   { port: 13006, appName: 'vue-nuxt', path: 'vue-nuxt/dist/' },
+  { port: 13007, appName: 'angular', path: 'angular/dist/angular/' },
 ]
 
 const browsers = [
@@ -72,6 +73,7 @@ module.exports = defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
+      ['dot'],
       ['line'],
       ['html', {open: 'never'}],
       ['json', {outputFile: 'playwright-report/report.json'}]

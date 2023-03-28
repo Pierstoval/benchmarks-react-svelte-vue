@@ -25,14 +25,14 @@ unset key
     set style fill solid
 
 # Generate plot statistics, like for retrieving average/mean values
-    array plotstats[21]
-    array runtime_plotstats[21]
+    array plotstats[24]
+    array runtime_plotstats[24]
 
-    do for [i=1:21] {
+    do for [i=1:24] {
      stats datafile using i name "stat" nooutput
      plotstats[i]=stat_mean
     }
-    do for [i=1:21] {
+    do for [i=1:24] {
      stats runtime_datafile using i name "stat" nooutput
      runtime_plotstats[i]=stat_mean
     }
@@ -49,68 +49,68 @@ set multiplot
 # --- yarn install time
     set size 1,0.175
     set origin 0,0.78
-    do for [i=1:7] {
+    do for [i=1:8] {
         set arrow from i, graph 0 to i, graph 1 lc rgb("#dddddd") nohead
     }
-    set xtics ('Svelte' 1,'Svelte Kit' 2,'React' 3,'React-Vite' 4,'React-Next.js' 5,'Vue' 6,'Vue-Nuxt' 7)
-    set xrange [0.5:7.5]
+    set xtics ('Svelte' 1,'Svelte Kit' 2,'React' 3,'React-Vite' 4,'React-Next.js' 5,'Vue' 6,'Vue-Nuxt' 7, 'Angular' 8)
+    set xrange [0.5:8.5]
     set format y "% g ms"
     set ytics 5000 nomirror
     set yrange [0:30000]
     set grid ytics
     set title "Yarn install execution time (smaller is better)" font ",24pt" center
-    plot for [i=1:7] datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb mainColor(i), \
-        for [i=1:7] datafile using (xPosition(i)):(plotstats[i]) with points pointtype 4 pointsize 3 lw 2 lc rgb meanColor(i)
+    plot for [i=1:8] datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb mainColor(i), \
+        for [i=1:8] datafile using (xPosition(i)):(plotstats[i]) with points pointtype 4 pointsize 3 lw 2 lc rgb meanColor(i)
 
 # --- build time
     set size 1,0.175
     set origin 0,0.60
-    do for [i=8:14] {
+    do for [i=9:16] {
         set arrow from i, graph 0 to i, graph 1 lc rgb("#dddddd") nohead
     }
-    set xtics ('Svelte' 8,'Svelte Kit' 9,'React' 10,'React-Vite' 11,'React-Next.js' 12,'Vue' 13,'Vue-Nuxt' 14)
-    set xrange [7.5:14.5]
+    set xtics ('Svelte' 9,'Svelte Kit' 10,'React' 11,'React-Vite' 12,'React-Next.js' 13,'Vue' 14,'Vue-Nuxt' 15, 'Angular' 16)
+    set xrange [8.5:16.5]
     set format y "% g ms"
     set ytics 5000 nomirror
     set yrange [0:25000]
     set grid ytics
     set title "Yarn build execution time (smaller is better)" font ",24pt" center
-    plot for [i=8:14] datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb mainColor(i), \
-        for [i=8:14] datafile using (xPosition(i)):(plotstats[i]) with points pointtype 4 pointsize 3 lw 2 lc rgb meanColor(i)
+    plot for [i=9:16] datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb mainColor(i), \
+        for [i=9:16] datafile using (xPosition(i)):(plotstats[i]) with points pointtype 4 pointsize 3 lw 2 lc rgb meanColor(i)
 
 # --- build size
     set size 1,0.175
     set origin 0,0.42
-    set xtics ('Svelte' 15,'Svelte Kit' 16,'React' 17,'React-Vite' 18,'React-Next.js' 19,'Vue' 20,'Vue-Nuxt' 21)
-    set xrange [14.5:21.5]
+    set xtics ('Svelte' 17,'Svelte Kit' 18,'React' 19,'React-Vite' 20,'React-Next.js' 21,'Vue' 22,'Vue-Nuxt' 23, 'Angular' 24)
+    set xrange [16.5:24.5]
     set ytics 100 nomirror
     set yrange [0:700]
     set format y "% g KB"
     set lmargin at screen 0.087
     set title "Final build size (smaller is better)" font ",24pt" center
-    plot for [i=15:21] datafile using (xPosition((i))):i with boxes lc rgb mainColor(i)
+    plot for [i=17:24] datafile using (xPosition((i))):i with boxes lc rgb mainColor(i)
 
 # --- Runtime performances
     set size 1,0.38
     set origin 0,0.03
     unset xtics
-    set xrange [0.5:21.5]
+    set xrange [0.5:24.5]
     set format y "% g ms"
     set ytics 500 nomirror
-    set yrange [13500:16000]
+    set yrange [11000:16000]
     set grid ytics
-    do for [i=1:21] {
+    do for [i=1:24] {
         set arrow from i, graph 0 to i, graph 1 lc rgb("#dddddd") nohead
     }
-    do for [i=1:7] {
-        set arrow from (i*3)+0.5, graph 0 to (i*3)+0.5, graph 1 lc rgb("#000") lw 2 nohead
+    do for [i=1:8] {
+        set arrow from (i*3)+0.5, graph 0 to (i*3)+0.5, graph 1 lc rgb("#000000") lw 2 nohead
     }
     set title "Runtime execution tests (smaller is better)" font ",24pt" center
 
     # Browsers
-    set label "■ Chromium" at 5,13300 font "Arial,20pt" center tc rgb runtimeColor(1)
-    set label "■ Firefox" at 10,13300 font "Arial,20pt" center tc rgb runtimeColor(2)
-    set label "■ Webkit" at 15,13300 font "Arial,20pt" center tc rgb runtimeColor(3)
+    set label "■ Chromium" at screen 0.25,0.02 font "Arial,20pt" center tc rgb runtimeColor(1)
+    set label "■ Firefox" at screen 0.5,0.02 font "Arial,20pt" center tc rgb runtimeColor(2)
+    set label "■ Webkit" at screen 0.75,0.02 font "Arial,20pt" center tc rgb runtimeColor(3)
 
     # Sections
     set label "Svelte" at 2,16060 font "Arial,14pt" center
@@ -120,8 +120,10 @@ set multiplot
     set label "React-Next" at 13.99,16060 font "Arial,14pt" center
     set label "Vue" at 17,16060 font "Arial,14pt" center
     set label "Vue-Nuxt" at 20,16060 font "Arial,14pt" center
-    plot for [i=1:21] runtime_datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb runtimeColor(i), \
-        for [i=1:21] runtime_datafile using (xPosition(i)):(runtime_plotstats[i]) with points pointtype 4 pointsize 3 lw 2 lc rgb meanRuntimeColor(i)
+    set label "Angular" at 23,16060 font "Arial,14pt" center
+
+    plot for [i=1:24] runtime_datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb runtimeColor(i), \
+        for [i=1:24] runtime_datafile using (xPosition(i)):(runtime_plotstats[i]) with points pointtype 4 pointsize 3 lw 2 lc rgb meanRuntimeColor(i)
 
 unset multiplot
 

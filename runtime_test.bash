@@ -76,6 +76,10 @@ ok
 
 info "Adding execution times to $(realpath results_runtime.csv) file"
 
+if [[ ! -f "output/${OUTPUT_FILE}.csv" ]]; then
+    cp headers_runtime.csv "output/${OUTPUT_FILE}_runtime.csv"
+fi
+
 echo "$csvLine" >> "output/${OUTPUT_FILE}_runtime.csv"
 
 ok

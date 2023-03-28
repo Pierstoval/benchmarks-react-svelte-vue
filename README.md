@@ -30,8 +30,8 @@ Pictured results:
 | Server                       | A                      | B                     |
 |------------------------------|------------------------|-----------------------|
 | Results                      | ![](./output/dedi.png) | ![](./output/vps.png) |
-| Number of build benchmarks   | 2562 | 975 |
-| Number of runtime benchmarks | 1164 | 973 |
+| Number of build benchmarks   | 2564 | 975 |
+| Number of runtime benchmarks | 1165 | 973 |
 
 ## How to reproduce
 

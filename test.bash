@@ -22,7 +22,37 @@ fi
 set -eu
 
 info "Cleaning up..."
-git clean -fdx -e output -e node_modules -e .idea
+rm -rf \
+    \
+    angular/node_modules \
+    angular/dist \
+    \
+    react/node_modules \
+    react/build \
+    \
+    react-vite/node_modules \
+    react-vite/.next \
+    react-vite/next-env.d.ts \
+    react-vite/dist \
+    \
+    react-next/node_modules \
+    react-next/.next \
+    react-next/next-env.d.ts \
+    react-next/out \
+    \
+    svelte/node_modules \
+    svelte/dist \
+    \
+    svelte-kit/node_modules \
+    svelte-kit/.svelte-kit \
+    svelte-kit/build \
+    \
+    vue/node_modules \
+    vue/dist \
+    \
+    vue-nuxt/node_modules \
+    vue-nuxt/.nuxt \
+    vue-nuxt/dist \
 
 ok
 

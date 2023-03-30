@@ -27,11 +27,11 @@ The benchmark is roughly a thousands of build tests and hundreds of runtime test
 
 Pictured results:
 
-| Server                       | A                      | B                     |
-|------------------------------|------------------------|-----------------------|
-| Results                      | ![](./output/dedi.png) | ![](./output/vps.png) |
-| Number of build benchmarks   | 307 | 317 |
-| Number of runtime benchmarks | 307 | 316 |
+| Server                       | A                      | B                     | C                       |
+|------------------------------|------------------------|-----------------------|-------------------------|
+| Results                      | ![](./output/dedi.png) | ![](./output/vps.png) | ![](./output/local.png) |
+| Number of build benchmarks   | 307 | 317 | | 242 |
+| Number of runtime benchmarks | 307 | 316 | 19 |
 
 ## How to reproduce
 

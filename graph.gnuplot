@@ -25,6 +25,22 @@ unset key
     set style fill solid
 
 # Generate plot statistics, like for retrieving average/mean values
+    thresholdRatio = 8
+
+    maxInstallTime = system(sprintf('cat "%s" | tail -n +2 | awk -F ";" "{print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8}" | tr " " "\n"| grep -v "^$" | sort -n | tail -1', datafile))
+    minInstallTime = system(sprintf('cat "%s" | tail -n +2 | awk -F ";" "{print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8}" | tr " " "\n"| grep -v "^$" | sort -n | head -1', datafile))
+    installThreshold = floor(maxInstallTime / (100 * thresholdRatio)) * 100
+
+    maxBuildTime = system(sprintf('cat "%s" | tail -n +2 | awk -F ";" "{print \$9,\$10,\$11,\$12,\$13,\$14,\$15,\$16}" | tr " " "\n"| grep -v "^$" | sort -n | tail -1', datafile))
+    buildTimeThreshold = floor(maxBuildTime / (100 * thresholdRatio)) * 100
+
+    maxBuildSize = system(sprintf('cat "%s" | tail -n +2 | awk -F ";" "{print \$17,\$18,\$19,\$20,\$21,\$22,\$23,\$24}" | tr " " "\n"| grep -v "^$" | sort -n | tail -1', datafile))
+    buildSizeThreshold = floor(maxBuildSize / (100 * 5)) * 100
+
+    maxRuntime = system(sprintf('cat "%s" | tail -n +2 | awk -F ";" "{print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10,\$11,\$12,\$13,\$14,\$15,\$16,\$17,\$18,\$19,\$20,\$21,\$22,\$23,\$24}" | tr " " "\n"| grep -v "^$" | sort -n | tail -1', runtime_datafile))
+    minRunTime = system(sprintf('cat "%s" | tail -n +2 | awk -F ";" "{print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10,\$11,\$12,\$13,\$14,\$15,\$16,\$17,\$18,\$19,\$20,\$21,\$22,\$23,\$24}" | tr " " "\n"| grep -v "^$" | sort -n | head -1', runtime_datafile))
+    runtimeThreshold = floor((maxRuntime - minRunTime) / (100 * thresholdRatio)) * 100
+
     array plotstats[24]
     array runtime_plotstats[24]
 
@@ -55,8 +71,8 @@ set multiplot
     set xtics ('Svelte' 1,'Svelte Kit' 2,'React' 3,'React-Vite' 4,'React-Next.js' 5,'Vue' 6,'Vue-Nuxt' 7, 'Angular' 8)
     set xrange [0.5:8.5]
     set format y "% g ms"
-    set ytics 5000 nomirror
-    set yrange [0:30000]
+    set ytics installThreshold nomirror
+    set yrange [0:maxInstallTime+500]
     set grid ytics
     set title "Yarn install execution time (smaller is better)" font ",24pt" center
     plot for [i=1:8] datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb mainColor(i), \
@@ -71,8 +87,8 @@ set multiplot
     set xtics ('Svelte' 9,'Svelte Kit' 10,'React' 11,'React-Vite' 12,'React-Next.js' 13,'Vue' 14,'Vue-Nuxt' 15, 'Angular' 16)
     set xrange [8.5:16.5]
     set format y "% g ms"
-    set ytics 5000 nomirror
-    set yrange [0:25000]
+    set ytics buildTimeThreshold nomirror
+    set yrange [0:maxBuildTime+100]
     set grid ytics
     set title "Yarn build execution time (smaller is better)" font ",24pt" center
     plot for [i=9:16] datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb mainColor(i), \
@@ -83,8 +99,8 @@ set multiplot
     set origin 0,0.42
     set xtics ('Svelte' 17,'Svelte Kit' 18,'React' 19,'React-Vite' 20,'React-Next.js' 21,'Vue' 22,'Vue-Nuxt' 23, 'Angular' 24)
     set xrange [16.5:24.5]
-    set ytics 100 nomirror
-    set yrange [0:700]
+    set ytics buildSizeThreshold nomirror
+    set yrange [0:maxBuildSize+20]
     set format y "% g KB"
     set lmargin at screen 0.087
     set title "Final build size (smaller is better)" font ",24pt" center
@@ -96,8 +112,8 @@ set multiplot
     unset xtics
     set xrange [0.5:24.5]
     set format y "% g ms"
-    set ytics 500 nomirror
-    set yrange [11000:16000]
+    set ytics runtimeThreshold nomirror
+    set yrange [minRunTime-20:maxRuntime+20]
     set grid ytics
     do for [i=1:24] {
         set arrow from i, graph 0 to i, graph 1 lc rgb("#dddddd") nohead
@@ -113,14 +129,14 @@ set multiplot
     set label "■ Webkit" at screen 0.75,0.02 font "Arial,20pt" center tc rgb runtimeColor(3)
 
     # Sections
-    set label "Svelte" at 2,16060 font "Arial,14pt" center
-    set label "Svelte Kit" at 5,16060 font "Arial,14pt" center
-    set label "React" at 8,16060 font "Arial,14pt" center
-    set label "React-Vite" at 11,16060 font "Arial,14pt" center
-    set label "React-Next" at 13.99,16060 font "Arial,14pt" center
-    set label "Vue" at 17,16060 font "Arial,14pt" center
-    set label "Vue-Nuxt" at 20,16060 font "Arial,14pt" center
-    set label "Angular" at 23,16060 font "Arial,14pt" center
+    set label "Svelte" at screen 0.1425,0.375 font "Arial,14pt" center
+    set label "Svelte Kit" at screen 0.255,0.375 font "Arial,14pt" center
+    set label "React" at screen 0.365,0.375 font "Arial,14pt" center
+    set label "React-Vite" at screen 0.475,0.375 font "Arial,14pt" center
+    set label "React-Next" at screen 0.59,0.375 font "Arial,14pt" center
+    set label "Vue" at screen 0.695,0.375 font "Arial,14pt" center
+    set label "Vue-Nuxt" at screen 0.81,0.375 font "Arial,14pt" center
+    set label "Angular" at screen 0.92,0.375 font "Arial,14pt" center
 
     plot for [i=1:24] runtime_datafile using (xPosition(i)):i with linespoints pointtype 1 pointsize 0.75 lc rgb runtimeColor(i), \
         for [i=1:24] runtime_datafile using (xPosition(i)):(runtime_plotstats[i]) with points pointtype 4 pointsize 3 lw 2 lc rgb meanRuntimeColor(i)

@@ -30,5 +30,8 @@ numberDediRuntime=$(getNumber 'dedi_runtime')
 numberVps=$(getNumber 'vps')
 numberVpsRuntime=$(getNumber 'vps_runtime')
 
-sed -i README.md -e "s~\(Number of build benchmarks\).*~\1   | $numberDedi | $numberVps |~gi"
-sed -i README.md -e "s~\(Number of runtime benchmarks\).*~\1 | $numberDediRuntime | $numberVpsRuntime |~gi"
+numberLocal=$(getNumber 'local')
+numberLocalRuntime=$(getNumber 'local_runtime')
+
+sed -i README.md -e "s~\(Number of build benchmarks\).*~\1   | $numberDedi | $numberVps | | $numberLocal |~gi"
+sed -i README.md -e "s~\(Number of runtime benchmarks\).*~\1 | $numberDediRuntime | $numberVpsRuntime | $numberLocalRuntime |~gi"

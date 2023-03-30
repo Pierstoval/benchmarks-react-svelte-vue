@@ -27,10 +27,10 @@ The benchmark is roughly a thousands of build tests and hundreds of runtime test
 
 Pictured results:
 
-| Server                       | A                      | B                     | C                       |
+| Server                       | Dedicated server       | VPS                   | Local machine           |
 |------------------------------|------------------------|-----------------------|-------------------------|
 | Results                      | ![](./output/dedi.png) | ![](./output/vps.png) | ![](./output/local.png) |
-| Number of build benchmarks   | 332 | 344 | | 242 |
+| Number of build benchmarks   | 332 | 344 | 242 |
 | Number of runtime benchmarks | 332 | 343 | 19 |
 
 ## How to reproduce

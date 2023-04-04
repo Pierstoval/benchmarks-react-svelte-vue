@@ -30,8 +30,8 @@ Pictured results:
 | Server                       | Dedicated server       | VPS                   | Local machine           |
 |------------------------------|------------------------|-----------------------|-------------------------|
 | Results                      | ![](./output/dedi.png) | ![](./output/vps.png) | ![](./output/local.png) |
-| Number of build benchmarks   | 332 | 344 | 245 |
-| Number of runtime benchmarks | 332 | 343 | 22 |
+| Number of build benchmarks   | 332 | 1141 | 245 |
+| Number of runtime benchmarks | 332 | 1140 | 22 |
 
 ## How to reproduce
 

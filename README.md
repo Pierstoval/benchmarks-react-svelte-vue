@@ -1,5 +1,5 @@
-Svelte vs React vs Vue
-======================
+Svelte vs React vs Vue vs Angular
+=================================
 
 This is repo contains some tools to benchmark how Svelte, React and Vue can compete together on some technical requirements:
 
@@ -63,7 +63,7 @@ There are **two scripts** depending on the benchmark you're looking for.
 3. The `./runtime_test.bash` script runs a `runtime` test. It makes sure apps are built as static sites, build them if they're not, use `playwright` to start a web server for each app, run the benchmarks, and output the results to the `results_runtime.csv` file. 
 4. The `./suite.bash` script runs both `test.bash` and `runtime_test.bash` consecutively. It is a helper to run all tests at once. 
 
-If you reproduce, I recommend you to customize the `OUTPUT_FILE` environment variable to something different than the exusting files so that your data is more consistent. We cannot really use the data from different sources, as performance might be really different across platforms.
+If you reproduce, I recommend you to customize the `OUTPUT_FILE` environment variable to something different than the existing files (which are `dedi`, `vps` and `local`) so that your data is more consistent. We cannot really use the data from different sources, as performance might be really different across platforms.
 
 > Note: remember to **keep the first line** of the CSV files. It serves as headers for the graphs.
 

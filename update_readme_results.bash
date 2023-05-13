@@ -35,3 +35,10 @@ numberLocalRuntime=$(getNumber 'local_runtime')
 
 sed -i README.md -e "s~\(Number of build benchmarks\).*~\1   | $numberDedi | $numberVps | $numberLocal |~gi"
 sed -i README.md -e "s~\(Number of runtime benchmarks\).*~\1 | $numberDediRuntime | $numberVpsRuntime | $numberLocalRuntime |~gi"
+
+# Number of dependencies
+# find . -mindepth 2 -maxdepth 2 -name "yarn.lock" -exec bash -c "echo -n \"{} \" && rg -e '@[\^~<>=]*\d+' {} | sort -u | wc -l" \; | awk '{print $2,$1}' | sort -rn 
+# find . -mindepth 2 -maxdepth 2 -name "yarn.lock" -exec bash -c "echo -n \"{} \" && yarn --cwd \$(dirname {}) list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l" \; | awk '{print $2,$1}' | sort -rn
+# find . -mindepth 2 -maxdepth 2 -name "yarn.lock" | xargs dirname | xargs -I % bash -c "echo -n \"%  \" && find % -type d -name \"node_modules\" -exec bash -c 'echo -n \"{} \" && cd {} && ls -l | wc -l' \; | awk '{print \$2}' | awk '{s+=\$1} END {print s}' " | awk '{print $2,$1}' | sort -rn
+# find . -mindepth 2 -maxdepth 2 -name "yarn.lock" | xargs dirname | xargs -I % bash -c "echo -n \"% \" && npm --prefix % ls -a -p | wc -l" | awk '{print $2,$1}' | sort -rn
+

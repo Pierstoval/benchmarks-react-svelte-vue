@@ -24,8 +24,8 @@ getNumber() {
   echo $(node -e "process.stdout.write(String($(< "output/$1.csv" wc -l)-1))")
 }
 
-numberDedi=$(getNumber 'dedi')
-numberDediRuntime=$(getNumber 'dedi_runtime')
+numberDedi=$(getNumber 'dedi-2023-07')
+numberDediRuntime=$(getNumber 'dedi-2023-07_runtime')
 
 numberVps=$(getNumber 'vps')
 numberVpsRuntime=$(getNumber 'vps_runtime')

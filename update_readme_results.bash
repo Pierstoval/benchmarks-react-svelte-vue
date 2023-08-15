@@ -37,8 +37,15 @@ sed -i README.md -e "s~\(Number of build benchmarks\).*~\1   | $numberDedi | $nu
 sed -i README.md -e "s~\(Number of runtime benchmarks\).*~\1 | $numberDediRuntime | $numberVpsRuntime | $numberLocalRuntime |~gi"
 
 # Number of dependencies
-# find . -mindepth 2 -maxdepth 2 -name "yarn.lock" -exec bash -c "echo -n \"{} \" && rg -e '@[\^~<>=]*\d+' {} | sort -u | wc -l" \; | awk '{print $2,$1}' | sort -rn 
-# find . -mindepth 2 -maxdepth 2 -name "yarn.lock" -exec bash -c "echo -n \"{} \" && yarn --cwd \$(dirname {}) list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l" \; | awk '{print $2,$1}' | sort -rn
-# find . -mindepth 2 -maxdepth 2 -name "yarn.lock" | xargs dirname | xargs -I % bash -c "echo -n \"%  \" && find % -type d -name \"node_modules\" -exec bash -c 'echo -n \"{} \" && cd {} && ls -l | wc -l' \; | awk '{print \$2}' | awk '{s+=\$1} END {print s}' " | awk '{print $2,$1}' | sort -rn
+#
+## Uses regex on yarn.lock to list all actual dependencies, regardless of multiple versions:
+# find . -mindepth 2 -maxdepth 2 -name "yarn.lock" -exec bash -c "echo -n \"{} \" && rg -e '@[\^~<>=]*\d+' {} | sort -u | wc -l" \; | awk '{print $2,$1}' | sort -rn
+#
+## Uses "yarn list", which is supposed to be "the way™":
+# find . -mindepth 2 -maxdepth 2 -name "yarn.lock" -exec bash -c "echo -n \"{} \" && yarn --cwd \$(dirname {}) list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l" \; | awk '{sub(/\/yarn.lock/, "") ; print $2,substr($1,3)}' | sort -rn
+#
+## Searches for node_modules dirs and counts them children:
+# find . -mindepth 2 -maxdepth 2 -name "yarn.lock" | xargs dirname | xargs -I % bash -c "echo -n \"%  \" && find % -type d -name \"node_modules\" -exec bash -c 'echo -n \"{} \" && cd {} && ls -l | wc -l' \; | awk '{print \$2}' | awk '{s+=\$1} END {print s}' " | awk '{print $2,$1}' | sort -rn
+#
+## Uses "npm ls", which is *also* supposed to be "the way™", but gives different results than "yarn list", because nodejs:
 # find . -mindepth 2 -maxdepth 2 -name "yarn.lock" | xargs dirname | xargs -I % bash -c "echo -n \"% \" && npm --prefix % ls -a -p | wc -l" | awk '{print $2,$1}' | sort -rn
-

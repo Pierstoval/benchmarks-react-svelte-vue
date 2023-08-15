@@ -10,7 +10,7 @@ const apps = [
   { port: 13004, appName: 'react-next', path: 'react-next/out/' },
   { port: 13005, appName: 'vue', path: 'vue/dist/' },
   { port: 13006, appName: 'vue-nuxt', path: 'vue-nuxt/dist/' },
-  { port: 13007, appName: 'angular', path: 'angular/dist/angular/' },
+  { port: 13007, appName: 'angular', path: 'angular/dist/' },
 ]
 
 const browsers = [

@@ -178,7 +178,7 @@ build_size() {
 runtime_bench() {
     info "Running runtime benchmarks..."
     end_info_line
-    infoln " TODO "
+    info_ln " TODO "
 }
 
 #
@@ -191,7 +191,7 @@ apps_directories_array=($apps_directories)
 shift # Drops first element of arguments
 apps_to_process="$@" # Retrieves variadic elements after the first one (1st one excluded)
 
-infoln "apps_to_process: $apps_to_process"
+info_ln "apps_to_process: $apps_to_process"
 
 if [[ -z $apps_to_process ]]; then
     note " Reminder: you can also add a second argument to this script if you want to run only one single test suite."
@@ -202,7 +202,7 @@ if [[ -z $apps_to_process ]]; then
     note "  $curscript ${OUTPUT_FILE} ${randomapp}"
 fi
 
-infoln "Processing tests..."
+info_ln "Processing tests..."
 
 echo "$apps_directories" | while IFS= read -r line ; do
     if [[ -z $apps_to_process ]]; then

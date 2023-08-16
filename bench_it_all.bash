@@ -38,6 +38,10 @@ errinfo() {
 #
 
 if [[ -z "${OUTPUT_FILE}" ]]; then
+    OUTPUT_FILE=$1
+fi
+
+if [[ -z "${OUTPUT_FILE}" ]]; then
     err "Please specify the OUTPUT_FILE env var before running the test suite."
     exit 1
 fi
@@ -181,9 +185,30 @@ runtime_bench() {
 #
 
 apps_directories=$(cd apps && for f in *; do if [ -d "$f" ]; then echo "$f" ; fi ; done)
+apps_directories_array=($apps_directories)
 
-infoln "Processing all directories one by one..."
+shift # Drops first element of arguments
+apps_to_process="$@" # Retrieves variadic elements after the first one (1st one excluded)
+
+infoln "apps_to_process: $apps_to_process"
+
+if [[ -z $apps_to_process ]]; then
+    note " Reminder: you can also add a second argument to this script if you want to run only one single test suite."
+    note " Example:"
+    curscript=$(basename "$0")
+    randomv=$[ $RANDOM % ${#apps_directories_array[@]} ]
+    randomapp=${apps_directories_array[ $RANDOM % ${#apps_directories_array[@]} ]}
+    note "  $curscript ${OUTPUT_FILE} ${randomapp}"
+fi
+
+infoln "Processing tests..."
 
 echo "$apps_directories" | while IFS= read -r line ; do
-    process "$line"
+    if [[ -z $apps_to_process ]]; then
+        process $line
+    elif [[ "$apps_to_process" == *"$line"* ]]; then
+        process $line
+    else
+        note "$line (skipped)"
+    fi
 done

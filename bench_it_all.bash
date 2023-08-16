@@ -11,25 +11,22 @@ cd "$CWD"
 info() {
     printf "    %s" "$1"
 }
+ok() {
+    printf "\r \033[32m%s\033[0m\n" "✅"
+}
+info_ln() {
+    printf " \033[32m%s\033[0m %s\n" "[INFO]" "$1"
+}
 note() {
     printf " \033[33m%s\033[0m\n" "$1"
 }
-infoln() {
-    printf " \033[32m%s\033[0m %s\n" "[INFO]" "$1"
-}
-textnote() {
+text_note() {
     printf " %s \033[33m%s\033[0m\n" "$1" "$2"
-}
-infoln() {
-    printf " \033[32m%s\033[0m %s\n" "[INFO]" "$1"
 }
 err() {
     printf " \033[31m[ERROR]\033[0m %s\n" "$1"
 }
-ok() {
-    printf "\r \033[32m%s\033[0m\n" "✅"
-}
-errinfo() {
+end_info_line() {
     printf "\r \033[32m%s\033[0m\n" "❌"
 }
 
@@ -49,7 +46,7 @@ fi
 info "Make sure processtime is installed..."
 if ! command -v processtime &> /dev/null
 then
-    errinfo
+    end_info_line
     err "processtime could not be found"
     err "Install it with \"cargo install processtime\"."
     exit 1
@@ -59,7 +56,7 @@ ok
 info "Make sure \"du\" command is available..."
 if ! command -v du &> /dev/null
 then
-    errinfo
+    end_info_line
     err "\"du\" command could not be found"
     err "Possible causes:"
     err " > You are not using a unix OS."
@@ -102,7 +99,7 @@ save_value_to_csv() {
 process() {
     app=$1
     note "$app:"
-    cleanup $app
+    cleanup "$app"
     yarn_install "$app"
     yarn_build "$app"
     dependencies "$app"
@@ -113,22 +110,22 @@ process() {
 cleanup() {
     app=$1
     info "Cleanup..."
-        git clean -fdx -- "apps/$app"
+        git clean -fdx -- "apps/$app" >/dev/null 2>&1
     ok
 }
 
 yarn_install() {
     app=$1
     info "Install dependencies..."
-        time=$(time_command "${yarn} --cwd=apps/$app --frozen-lockfile install")
+        time=$(time_command "${yarn} --cwd=apps/$app --frozen-lockfile install" 2>/dev/null)
     ok
     save_value_to_csv $app "install_time" $time
 }
 
 yarn_build() {
     app=$1
-    info "Install dependencies..."
-        time=$(time_command "${yarn} --cwd=apps/$app build")
+    info "Build static application..."
+        time=$(time_command "${yarn} --cwd=apps/$app build" 2>/dev/null)
     ok
     save_value_to_csv $app "build_time" $time
 }
@@ -141,15 +138,15 @@ dependencies() {
         #    yarn --cwd apps/$app list --silent
         #    | sed 's/^[^a-zA-Z0-9_@-]\+//g'     # Remove the "└─" or "├─" tree-related characters
         #    | sed 's/@[0-9^~\.-]\+$//g'         # Remove the "@...` version tag
-        #    | sort -u                           # Remove duplicates (will effectively not count 2 versions as 2 dependencies)
+        #    | sort -u                           # Remove duplicate lines
         #    | wc -l                             # Counts number of elements
 
-        amount_with_duplicates=$(yarn --cwd apps/$app list --silent \ | sed 's/^[^a-zA-Z0-9_@-]\+//g' \ | sed 's/@[0-9^~\.-]\+$//g' \ | wc -l)
-        amount_without_duplicates=$(yarn --cwd apps/$app list --silent \ | sed 's/^[^a-zA-Z0-9_@-]\+//g' \ | sed 's/@[0-9^~\.-]\+$//g' \ | sort -u \ | wc -l)
+        amount_with_duplicates=$(yarn --cwd apps/$app list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sort -u | wc -l)
+        amount_without_duplicates=$(yarn --cwd apps/$app list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l)
     ok
 
-    save_time $app "dependencies_amount_with_duplicates" $amount_with_duplicates
-    save_time $app "dependencies_amount_without_duplicates" $amount_without_duplicates
+    save_value_to_csv $app "dependencies_amount_with_duplicates" $amount_with_duplicates
+    save_value_to_csv $app "dependencies_amount_without_duplicates" $amount_without_duplicates
 }
 
 build_size() {
@@ -163,7 +160,7 @@ build_size() {
         elif [[ -d "apps/$app/out" ]]; then
             dir="apps/$app/out"
         else
-            errinfo
+            end_info_line
             err "Could not determine build directory for \"$app\" application."
             err "Possible causes:"
             err "> No directory named \"dist\", \"build\" or \"out\"."
@@ -177,6 +174,8 @@ build_size() {
 }
 
 runtime_bench() {
+    info "Running runtime benchmarks..."
+    end_info_line
     infoln " TODO "
 }
 

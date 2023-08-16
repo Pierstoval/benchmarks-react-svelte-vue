@@ -5,7 +5,7 @@ test('Test todo app', async ({ page, port }) => {
     await page.goto(`http://127.0.0.1:${port}/`);
     expect(page.url()).toBe(`http://127.0.0.1:${port}/`);
 
-    const numberOfElements = 100;
+    const numberOfElements = 200;
 
     for (let i = 0; i <= numberOfElements; i++) {
         const text = 'Test content '+i;

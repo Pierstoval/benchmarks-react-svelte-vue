@@ -1,17 +1,20 @@
+import { readdirSync } from 'fs';
+
 // @ts-check
 const { defineConfig, devices } = require('@playwright/test');
 
 
-const apps = [
-  { port: 13000, appName: 'svelte', path: 'svelte/dist/' },
-  { port: 13001, appName: 'svelte-kit', path: 'svelte-kit/build/' },
-  { port: 13002, appName: 'react', path: 'react/build/' },
-  { port: 13003, appName: 'react-vite', path: 'react-vite/dist/' },
-  { port: 13004, appName: 'react-next', path: 'react-next/out/' },
-  { port: 13005, appName: 'vue', path: 'vue/dist/' },
-  { port: 13006, appName: 'vue-nuxt', path: 'vue-nuxt/dist/' },
-  { port: 13007, appName: 'angular', path: 'angular/dist/' },
-]
+const apps = readdirSync(__dirname+"/apps/", { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+
+function error(message) {
+  console.error(`\x1b[31m [ERROR] ${message}\x1b[0m`)
+}
+
+function green_message(type, message) {
+  console.error(`\x1b[32m [${type}]\x1b[0m ${message}`)
+}
 
 const browsers = [
   { browserName: 'chromium', devices: devices['Desktop Chrome'] },
@@ -19,29 +22,42 @@ const browsers = [
   { browserName: 'webkit', devices: devices['Desktop Safari'] },
 ];
 
-const webservers = [];
-const finalProjects = [];
+const appToTest = process.env.TEST_APP || null;
 
-apps.forEach(({port, appName, path}) => {
-  webservers.push({
-    port,
-    command: `npx http-server -p ${port} ${__dirname}/${path}`,
-    timeout: 10 * 1000,
-    reuseExistingServer: !process.env.CI,
-  });
+if (apps.indexOf(appToTest) < 0) {
+  error("You must specify which application to test by specifying the TEST_APP environment variable.");
+  error("Possible values:")
+  error(" "+apps.join(", ")+"");
+  process.exit(1);
+}
 
-  browsers.forEach(({browserName, devices}) => {
-    finalProjects.push({
-      name: `${appName} with browser ${browserName}`,
-      use: {
-        port,
-        devices: {
-          uses: {...devices},
-        },
-      }
-    });
-  });
-});
+green_message("INFO", `Configuring "${appToTest}" app...`)
+
+const port = 13000;
+const path = __dirname+"/apps/"+appToTest+"/dist/";
+
+const webserver = {
+  port,
+  command: `npx http-server -p ${port} ${path}`,
+  timeout: 10 * 1000,
+  reuseExistingServer: !process.env.CI,
+};
+
+green_message("INFO", `Configuring browsers...`)
+
+const finalProjects = browsers
+    .map(({browserName, devices}) => {
+      return {
+        name: `${browserName}`,
+        use: {
+          port,
+          devices: {
+            uses: {...devices},
+          },
+        }
+      };
+    })
+;
 
 /**
  * Read environment variables from file.
@@ -133,5 +149,5 @@ module.exports = defineConfig({
   //   command: 'npm run start',
   //   port: 3000,
   // },
-  webServer: webservers,
+  webServer: webserver,
 });

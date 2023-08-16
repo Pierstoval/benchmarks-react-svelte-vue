@@ -88,9 +88,9 @@ du=$(which du)
 output_file_prefix() {
     app=$1
     extension=$2
-    out_dir="${CWD}/output/${OUTPUT_DIR}/${app}"
+    out_dir="${CWD}/output/${OUTPUT_DIR}"
     [[ -d "$out_dir" ]] || mkdir -p "$out_dir"
-    echo "$out_dir.${extension}"
+    echo "$out_dir/${app}.${extension}"
 }
 
 time_command() {

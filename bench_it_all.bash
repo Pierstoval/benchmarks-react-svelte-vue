@@ -78,7 +78,9 @@ du=$(which du)
 output_file_prefix() {
     app=$1
     suffix=$2
-    echo "${CWD}/out/${app}${suffix}"
+    out_dir="${CWD}/output/${app}"
+    [[ -d "$out_dir" ]] || mkdir -p "$out_dir"
+    echo "$out_dir/${suffix}"
 }
 
 time_command() {
@@ -89,7 +91,7 @@ save_value_to_csv() {
   app=$1
   type=$2
   value=$3
-  echo $value >> $(output_file_prefix "$type.csv")
+  echo $value >> $(output_file_prefix "$app" "$type.csv")
 }
 
 #

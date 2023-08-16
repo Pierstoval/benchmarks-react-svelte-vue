@@ -4,3 +4,6 @@ node_modules/
 /output/
 !/output/.gitkeep
 
+# Remove dist dirs for *all* projects.
+# This prevent having to update .gitignore everywhere.
+apps/*/dist

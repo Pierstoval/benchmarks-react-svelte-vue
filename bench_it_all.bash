@@ -87,10 +87,10 @@ du=$(which du)
 
 output_file_prefix() {
     app=$1
-    suffix=$2
+    extension=$2
     out_dir="${CWD}/output/${OUTPUT_DIR}/${app}"
     [[ -d "$out_dir" ]] || mkdir -p "$out_dir"
-    echo "$out_dir/${suffix}"
+    echo "$out_dir.${extension}"
 }
 
 time_command() {
@@ -100,9 +100,18 @@ time_command() {
 
 save_value_to_csv() {
   app=$1
-  type=$2
-  value=$3
-  filename=$(output_file_prefix "$app" "$type.csv")
+  value=$2
+  headers=$3
+  filename=$(output_file_prefix "$app" "csv")
+
+  if [[ ! -f "$filename" ]]; then
+      if [[ -z "$headers" ]]; then
+          touch "$filename"
+      else
+          echo "$headers" > "$filename"
+      fi
+  fi
+
   echo "$value" >> "$filename"
 }
 
@@ -112,39 +121,17 @@ save_value_to_csv() {
 
 process() {
     app=$1
-    cleanup "$app"
-    yarn_install "$app"
-    yarn_build "$app"
-    dependencies "$app"
-    build_size "$app"
-    runtime_bench "$app"
-}
-
-cleanup() {
-    app=$1
     info "Cleanup..."
         git clean -fdx -- "apps/$app" >/dev/null 2>&1
     end_info_line_with_ok
-}
 
-yarn_install() {
-    app=$1
     info "Install dependencies..."
-        time=$(time_command "${yarn} --cwd=apps/$app --frozen-lockfile install" 2>/dev/null)
-        save_value_to_csv "$app" "install_time" "$time"
+        install_time=$(time_command "${yarn} --cwd=apps/$app --frozen-lockfile install" 2>/dev/null)
     end_info_line_with_ok
-}
 
-yarn_build() {
-    app=$1
     info "Build static application..."
-        time=$(time_command "${yarn} --cwd=apps/$app build" 2>/dev/null)
-        save_value_to_csv "$app" "build_time" "$time"
+        build_time=$(time_command "${yarn} --cwd=apps/$app build" 2>/dev/null)
     end_info_line_with_ok
-}
-
-dependencies() {
-    app=$1
 
     info "Counting dependencies..."
         # Commands explanation:
@@ -153,19 +140,11 @@ dependencies() {
         #    | sed 's/@[0-9^~\.-]\+$//g'         # Remove the "@...` version tag
         #    | sort -u                           # Remove duplicate lines
         #    | wc -l                             # Counts number of elements
-
-        amount_with_duplicates=$(yarn --cwd "apps/$app" list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sort -u | wc -l)
-        amount_without_duplicates=$(yarn --cwd "apps/$app" list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l)
-
-        save_value_to_csv "$app" "dependencies_amount_with_duplicates" "$amount_with_duplicates"
-        save_value_to_csv "$app" "dependencies_amount_without_duplicates" "$amount_without_duplicates"
+        deps_with_duplicates=$(yarn --cwd "apps/$app" list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sort -u | wc -l)
+        deps_without_duplicates=$(yarn --cwd "apps/$app" list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l)
     end_info_line_with_ok
-}
 
-build_size() {
-    app=$1
-
-    info "Determining build size..."
+    info "Determining build build_size..."
         dir="apps/$app/dist"
         if [[ ! -d "$dir" ]]; then
             end_info_line_with_error
@@ -176,34 +155,23 @@ build_size() {
             exit 1
         fi
 
-        size=$(${du} -s "$dir" | awk '{print $1}')
-        save_value_to_csv "$app" "build_size" "$size"
-
+        build_size=$(${du} -s "$dir" | awk '{print $1}')
     end_info_line_with_ok
 
-}
-
-runtime_bench() {
-    app=$1
-
     info "Running runtime benchmarks using Playwright..."
-
         # Using only one worker (with "-j 1") to make sure performance test are executed with only one app running.
         TEST_APP=$app ${yarn} playwright test -j 1
 
         report=$(< playwright-report/report.json jq -r '.suites[0].specs[] | .tests[0] | "\(.projectName) \(.results[0].duration)"' | sort)
 
-        filename=$(output_file_prefix "$app" "e2e_time.csv")
-
-        if [[ ! -f $filename ]]; then
-            csvHeader=$(echo "${report}" | awk '{print $1}' | tr '\n' ';' | sed '$ s/;$//')
-            echo "$csvHeader" > "$filename"
-        fi
-
-        csvLine=$(echo "${report}" | awk '{print $2}' | tr '\n' ';' | sed '$ s/;$//')
-        echo "$csvLine" >> "$filename"
-
+        e2e_headers=$(echo "${report}" | awk '{print $1}' | tr '\n' ';' | sed '$ s/;$//')
+        e2e_times=$(echo "${report}" | awk '{print $2}' | tr '\n' ';' | sed '$ s/;$//')
     end_info_line_with_ok
+
+    save_value_to_csv \
+        "$app" \
+        "$install_time;$build_time;$deps_with_duplicates;$deps_without_duplicates;$build_size;$e2e_times" \
+        "install_time;build_time;deps_with_duplicates;deps_without_duplicates;build_size;$e2e_headers"
 }
 
 #

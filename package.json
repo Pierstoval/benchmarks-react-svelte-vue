@@ -19,6 +19,6 @@
   },
   "homepage": "https://github.com/Pierstoval/helloworlds-react-svelte#readme",
   "devDependencies": {
-    "@playwright/test": "^1.31.2"
+    "@playwright/test": "^1.37.0"
   }
 }

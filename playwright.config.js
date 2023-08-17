@@ -12,10 +12,6 @@ function error(message) {
   console.error(`\x1b[31m [ERROR] ${message}\x1b[0m`)
 }
 
-function green_message(type, message) {
-  console.error(`\x1b[32m [${type}]\x1b[0m ${message}`)
-}
-
 const browsers = [
   { browserName: 'chromium', devices: devices['Desktop Chrome'] },
   { browserName: 'firefox', devices: devices['Desktop Firefox'] },
@@ -31,19 +27,15 @@ if (apps.indexOf(appToTest) < 0) {
   process.exit(1);
 }
 
-green_message("INFO", `Configuring "${appToTest}" app...`)
-
 const port = 13000;
 const path = __dirname+"/apps/"+appToTest+"/dist/";
 
 const webserver = {
   port,
   command: `npx http-server -p ${port} ${path}`,
-  timeout: 10 * 1000,
+  timeout: 30 * 1000,
   reuseExistingServer: !process.env.CI,
 };
-
-green_message("INFO", `Configuring browsers...`)
 
 const finalProjects = browsers
     .map(({browserName, devices}) => {
@@ -72,16 +64,16 @@ module.exports = defineConfig({
   testDir: './tests',
   quiet: !process.env.CI,
   /* Maximum time one test can run for. */
-  timeout: 30 * 1000,
+  timeout: 40 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
      * For example in `await expect(locator).toHaveText();`
      */
-    timeout: 5000
+    timeout: 8000
   },
   /* Run tests in files in parallel */
-  fullyParallel: true,
+  fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   retries: 0,

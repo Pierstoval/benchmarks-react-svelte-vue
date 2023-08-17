@@ -93,6 +93,12 @@ output_file_prefix() {
     echo "$out_dir/${app}.${extension}"
 }
 
+log_filename() {
+    app=$1
+    type=$2
+    output_file_prefix "${app}_${type}" "log"
+}
+
 time_command() {
     # shellcheck disable=SC2086
     ${processtime} --format=ms -- $1 | tail -1
@@ -119,18 +125,20 @@ save_value_to_csv() {
 # Processing functions
 #
 
+remove_colors_regex="s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"
+
 process() {
     app=$1
     info "Cleanup..."
-        git clean -fdx -- "apps/$app" >/dev/null 2>&1
+        git clean -fdx -- "apps/$app" | sed -r "$remove_colors_regex" 1>"$(log_filename "$app" "clean")" 2>&1
     end_info_line_with_ok
 
     info "Install dependencies..."
-        install_time=$(time_command "${yarn} --cwd=apps/$app --frozen-lockfile install" 2>/dev/null)
+        install_time=$(time_command "${yarn} --cwd=apps/$app --frozen-lockfile install")
     end_info_line_with_ok
 
     info "Build static application..."
-        build_time=$(time_command "${yarn} --cwd=apps/$app build" 2>/dev/null)
+        build_time=$(time_command "${yarn} --cwd=apps/$app build ")
     end_info_line_with_ok
 
     info "Counting dependencies..."
@@ -160,7 +168,7 @@ process() {
 
     info "Running runtime benchmarks using Playwright..."
         # Using only one worker (with "-j 1") to make sure performance test are executed with only one app running.
-        TEST_APP=$app ${yarn} playwright test -j 1
+        (TEST_APP=$app ${yarn} playwright test -j 1 | sed -r "$remove_colors_regex") 1>"$(log_filename "$app" "playwright")" 2>&1
 
         report=$(< playwright-report/report.json jq -r '.suites[0].specs[] | .tests[0] | "\(.projectName) \(.results[0].duration)"' | sort)
 

@@ -7,12 +7,39 @@ use std::os::unix::ffi::OsStrExt;
 use csv::Reader;
 use plotters::backend::BitMapBackend;
 use plotters::chart::ChartBuilder;
+use plotters::coord::Shift;
 use plotters::style::BLUE;
 use plotters::style::WHITE;
+use plotters::drawing::DrawingArea;
 use plotters::drawing::IntoDrawingArea;
 use plotters::element::Circle;
 use plotters::style::IntoFont;
 use plotters::style::Color;
+use itertools::Itertools;
+use itertools::sorted;
+
+const OUT_FILE_NAME: &'static str = "graph.png";
+const OUT_IMG_SIZE: (u32, u32) = (1200, 800);
+
+type RecordsMap = HashMap<String, (u32, Vec<CsvRecord>)>;
+
+enum ChartType {
+    InstallTime,
+    BuildTime,
+    DepsWithDuplicates,
+    DepsWithoutDuplicates,
+    BuildSize,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct CsvRecord {
+    index: i32,
+    install_time: i32,
+    build_time: i32,
+    deps_with_duplicates: i32,
+    deps_without_duplicates: i32,
+    build_size: i32,
+}
 
 fn main() {
     let matches = command!() // requires `cargo` feature
@@ -23,23 +50,29 @@ fn main() {
     let output_dir: Option<&String> = matches.get_one("output_dir");
     let output_dir = output_dir.unwrap();
 
-    let mut csv_content = get_csv_contents(output_dir);
+    // 2 readers are necessary because they can't be rewinded, and we need 2 loops:
+    // One to calculate maximum values (to allow chart to be correctly positioned).
+    // The other one to actually plot data into the chart.
+    let records_map = get_csv_records(output_dir);
 
-    generate_graph(&mut csv_content);
+    let root = BitMapBackend::new(OUT_FILE_NAME, OUT_IMG_SIZE)
+        .into_drawing_area();
+    root.fill(&WHITE).unwrap();
+
+    let maximums = get_maximums(&records_map);
+
+    let max_x = records_map.len() as i32;
+
+    create_chart(&root, records_map, max_x, maximums.install_time, ChartType::InstallTime);
+
+    // To avoid the IO failure being ignored silently, we manually call the present function
+    root
+        .present()
+        .expect("Unable to write result to file")
+    ;
 }
 
-type CsvContent = HashMap<String, Reader<File>>;
-
-#[derive(Debug, serde::Deserialize)]
-struct CsvRecord {
-    install_time: u32,
-    build_time: u32,
-    deps_with_duplicates: u32,
-    deps_without_duplicates: u32,
-    build_size: u32,
-}
-
-fn get_csv_contents(output_dir: &String) -> CsvContent {
+fn get_csv_records(output_dir: &String) -> RecordsMap {
     let mut apps = fs::read_dir("../apps/")
         .unwrap()
         // Resolve paths to OsString to utf8 vector
@@ -50,46 +83,120 @@ fn get_csv_contents(output_dir: &String) -> CsvContent {
     ;
     apps.sort();
 
-    let csv_contents = apps.iter().map(|app| {
-        let csv_path = format!("../output/{}/{}.csv", output_dir, app);
-        let file = File::open(&csv_path).expect(&format!("Could not open csv file {}", csv_path));
-        let csv_reader = csv::ReaderBuilder::new()
-            .has_headers(true)
-            .delimiter(b';')
-            .from_reader(file)
+    let records = apps
+        .iter()
+        .sorted()
+        .map(|app| {
+            dbg!(&app);
+            let csv_path = format!("../output/{}/{}.csv", output_dir, app);
+            let app = app.clone();
+            let file = File::open(&csv_path).expect(&format!("Could not open csv file {}", csv_path));
+            let csv_reader = csv::ReaderBuilder::new()
+                .has_headers(true)
+                .delimiter(b';')
+                .from_reader(file)
+            ;
+            return (app.to_string(), csv_reader);
+        })
+        .collect::<HashMap<String, Reader<File>>>()
+        .iter_mut()
+        .enumerate()
+        .map(|(index, (chart_name, csv_reader))| {
+            dbg!(&index, &chart_name);
+            let chart_name = chart_name.clone();
+            let records = csv_reader.deserialize().map(|record| {
+                let record: CsvRecord = record.unwrap();
+                record
+            }).collect::<Vec<CsvRecord>>();
+
+            (chart_name, (index as u32, records))
+        })
+        .collect::<RecordsMap>()
+        .iter()
         ;
-        return (app.to_string(), csv_reader);
-    })
-        .collect::<CsvContent>()
-        ;
-    csv_contents
+
+    records
 }
 
-const OUT_FILE_NAME: &'static str = "graph.png";
-const OUT_IMG_SIZE: (u32, u32) = (1200, 800);
+fn get_maximums(records_map: &RecordsMap) -> CsvRecord {
+    let mut maximums = CsvRecord {
+        index: 0,
+        install_time: 0,
+        build_time: 0,
+        deps_with_duplicates: 0,
+        deps_without_duplicates: 0,
+        build_size: 0,
+    };
 
-fn generate_graph(csv_contents: &mut CsvContent) {
-    dbg!("Generate graph");
+    for (_chart_name, (_, records)) in records_map.iter() {
+        for record in records {
+            if record.install_time > maximums.install_time {
+                maximums.install_time = record.install_time;
+            }
+            if record.build_time > maximums.build_time {
+                maximums.build_time = record.build_time;
+            }
+            if record.deps_with_duplicates > maximums.deps_with_duplicates {
+                maximums.deps_with_duplicates = record.deps_with_duplicates;
+            }
+            if record.deps_without_duplicates > maximums.deps_without_duplicates {
+                maximums.deps_without_duplicates = record.deps_without_duplicates;
+            }
+            if record.build_size > maximums.build_size {
+                maximums.build_size = record.build_size;
+            }
+        }
+    }
 
-    let root = BitMapBackend::new(OUT_FILE_NAME, OUT_IMG_SIZE)
-        .into_drawing_area();
-    root.fill(&WHITE).unwrap();
+    maximums
+}
 
+fn create_chart(
+    root: &DrawingArea<BitMapBackend, Shift>,
+    csv_records: RecordsMap,
+    max_x: i32,
+    max_y: i32,
+    chart_type: ChartType,
+) {
     let min_x: i32 = 0;
-    let max_x: i32 = csv_contents.len() as i32;
-
     let min_y: i32 = 0;
-    let max_y: i32 = 2500;
+
+    let max_y = (max_y as f32 * 1.1) as i32;
+
+    let chart_title = match chart_type {
+        ChartType::InstallTime => "Install time",
+        ChartType::BuildTime => "Build time",
+        ChartType::DepsWithDuplicates => "Deps with duplicates",
+        ChartType::DepsWithoutDuplicates => "Deps without duplicates",
+        ChartType::BuildSize => "Build size",
+    }.to_string();
 
     let mut chart = ChartBuilder::on(&root)
         .x_label_area_size(60)
         .y_label_area_size(60)
         .margin_bottom(30)
         .margin_right(20)
-        .caption("Benchmarking", ("sans-serif", 50.0).into_font())
+        .caption(chart_title, ("sans-serif", 50.0).into_font())
         .build_cartesian_2d(min_x..max_x, min_y..max_y)
         .unwrap()
     ;
+
+    for (chart_name, (index, records)) in csv_records.iter() {
+        dbg!(&chart_name);
+        chart.draw_series(
+            records.iter().map(|record| {
+                let y_value = match chart_type {
+                    ChartType::InstallTime => record.install_time,
+                    ChartType::BuildTime => record.build_time,
+                    ChartType::DepsWithDuplicates => record.deps_with_duplicates,
+                    ChartType::DepsWithoutDuplicates => record.deps_without_duplicates,
+                    ChartType::BuildSize => record.build_size,
+                };
+                Circle::new((1 + *index as i32, y_value), 5, BLUE.filled())
+            })
+        )
+            .unwrap();
+    }
 
     chart
         .configure_mesh()
@@ -98,21 +205,6 @@ fn generate_graph(csv_contents: &mut CsvContent) {
         .set_all_tick_mark_size(15)
         .draw()
         .unwrap()
-    ;
-
-    for (index, (_chart_name, csv_reader)) in csv_contents.iter_mut().enumerate() {
-        chart.draw_series(
-            csv_reader.deserialize().enumerate().map(|(index2, record)| {
-                let csv_line: CsvRecord = record.unwrap();
-                Circle::new((1 + index as i32, csv_line.install_time as i32), 2, BLUE.filled())
-            })
-        ).unwrap();
-    }
-
-    // To avoid the IO failure being ignored silently, we manually call the present function
-    root
-        .present()
-        .expect("Unable to write result to file")
     ;
 
 }

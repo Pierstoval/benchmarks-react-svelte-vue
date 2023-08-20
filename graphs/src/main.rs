@@ -8,20 +8,19 @@ use csv::Reader;
 use plotters::backend::BitMapBackend;
 use plotters::chart::ChartBuilder;
 use plotters::coord::Shift;
-use plotters::style::BLUE;
+use plotters::style::{BLACK, BLUE, RGBColor};
 use plotters::style::WHITE;
 use plotters::drawing::DrawingArea;
 use plotters::drawing::IntoDrawingArea;
 use plotters::element::Circle;
 use plotters::style::IntoFont;
 use plotters::style::Color;
-use itertools::Itertools;
-use itertools::sorted;
+use serde::Deserialize;
 
 const OUT_FILE_NAME: &'static str = "graph.png";
 const OUT_IMG_SIZE: (u32, u32) = (1200, 800);
 
-type RecordsMap = HashMap<String, (u32, Vec<CsvRecord>)>;
+type RecordsMap = Vec<(String, (u32, Vec<CsvRecord>))>;
 
 enum ChartType {
     InstallTime,
@@ -31,8 +30,9 @@ enum ChartType {
     BuildSize,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 struct CsvRecord {
+    #[serde(skip_deserializing)]
     index: i32,
     install_time: i32,
     build_time: i32,
@@ -53,7 +53,7 @@ fn main() {
     // 2 readers are necessary because they can't be rewinded, and we need 2 loops:
     // One to calculate maximum values (to allow chart to be correctly positioned).
     // The other one to actually plot data into the chart.
-    let records_map = get_csv_records(output_dir);
+    let mut records_map = get_csv_records(output_dir);
 
     let root = BitMapBackend::new(OUT_FILE_NAME, OUT_IMG_SIZE)
         .into_drawing_area();
@@ -63,7 +63,8 @@ fn main() {
 
     let max_x = records_map.len() as i32;
 
-    create_chart(&root, records_map, max_x, maximums.install_time, ChartType::InstallTime);
+    create_chart(&root, &mut records_map, max_x, maximums.install_time, ChartType::InstallTime);
+    // create_chart(&root, &mut records_map, max_x, maximums.build_size, ChartType::BuildSize);
 
     // To avoid the IO failure being ignored silently, we manually call the present function
     root
@@ -83,11 +84,9 @@ fn get_csv_records(output_dir: &String) -> RecordsMap {
     ;
     apps.sort();
 
-    let records = apps
+    let mut records = apps
         .iter()
-        .sorted()
         .map(|app| {
-            dbg!(&app);
             let csv_path = format!("../output/{}/{}.csv", output_dir, app);
             let app = app.clone();
             let file = File::open(&csv_path).expect(&format!("Could not open csv file {}", csv_path));
@@ -102,7 +101,6 @@ fn get_csv_records(output_dir: &String) -> RecordsMap {
         .iter_mut()
         .enumerate()
         .map(|(index, (chart_name, csv_reader))| {
-            dbg!(&index, &chart_name);
             let chart_name = chart_name.clone();
             let records = csv_reader.deserialize().map(|record| {
                 let record: CsvRecord = record.unwrap();
@@ -112,8 +110,9 @@ fn get_csv_records(output_dir: &String) -> RecordsMap {
             (chart_name, (index as u32, records))
         })
         .collect::<RecordsMap>()
-        .iter()
         ;
+
+    records.sort_by(|a, b| a.0.cmp(&b.0));
 
     records
 }
@@ -153,7 +152,7 @@ fn get_maximums(records_map: &RecordsMap) -> CsvRecord {
 
 fn create_chart(
     root: &DrawingArea<BitMapBackend, Shift>,
-    csv_records: RecordsMap,
+    csv_records: &mut RecordsMap,
     max_x: i32,
     max_y: i32,
     chart_type: ChartType,
@@ -181,8 +180,24 @@ fn create_chart(
         .unwrap()
     ;
 
-    for (chart_name, (index, records)) in csv_records.iter() {
-        dbg!(&chart_name);
+    let iter = csv_records;
+    iter.sort_by(|a, b| a.0.cmp(&b.0));
+
+    for (chart_name, (index, records)) in iter {
+        let chart_name = chart_name.clone();
+
+        let color = match chart_name.as_str() {
+            "angular" => RGBColor(0, 0, 255),
+            "react" => RGBColor(0, 255, 255),
+            "react-vite" => RGBColor(0, 255, 128),
+            "react-next" => RGBColor(0, 255, 0),
+            "svelte" => RGBColor(255, 255, 0),
+            "svelte-kit" => RGBColor(255, 128, 0),
+            "vue" => RGBColor(255, 128, 128),
+            "vue-nuxt" => RGBColor(255, 0, 0),
+            _ => RGBColor(128, 128, 128),
+        }.filled();
+
         chart.draw_series(
             records.iter().map(|record| {
                 let y_value = match chart_type {
@@ -192,7 +207,7 @@ fn create_chart(
                     ChartType::DepsWithoutDuplicates => record.deps_without_duplicates,
                     ChartType::BuildSize => record.build_size,
                 };
-                Circle::new((1 + *index as i32, y_value), 5, BLUE.filled())
+                Circle::new((1 + *index as i32, y_value), 5, color)
             })
         )
             .unwrap();

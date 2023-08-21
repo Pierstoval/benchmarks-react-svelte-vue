@@ -153,7 +153,7 @@ process() {
     end_info_line_with_ok
 
     info "Determining build build_size..."
-        dir="apps/$app/dist"
+        dir="apps/$app/dist/"
         if [[ ! -d "$dir" ]]; then
             end_info_line_with_error
             err "Could not determine build directory for \"$app\" application."

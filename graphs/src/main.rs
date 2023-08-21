@@ -71,13 +71,14 @@ fn main() {
 
     let max_x = records_map.len() as i32;
 
-    let roots = root.split_evenly((5, 1));
+    let roots = root.split_evenly((6, 1));
 
     create_chart(&roots.get(0).unwrap(), &records_map, max_x, 0, maximums.install_time, PointDisplayType::HorizontalLine, ChartType::InstallTime);
     create_chart(&roots.get(1).unwrap(), &records_map, max_x, 0, maximums.build_time, PointDisplayType::HorizontalLine, ChartType::BuildTime);
     create_chart(&roots.get(2).unwrap(), &records_map, max_x, 0, maximums.build_size, PointDisplayType::Circle, ChartType::BuildSize);
     create_chart(&roots.get(3).unwrap(), &records_map, max_x, 0, maximums.deps_with_duplicates, PointDisplayType::Circle, ChartType::DepsWithDuplicates);
     create_chart(&roots.get(4).unwrap(), &records_map, max_x, 0, maximums.deps_without_duplicates, PointDisplayType::Circle, ChartType::DepsWithoutDuplicates);
+    create_browser_chart(&roots.get(5).unwrap(), &records_map, max_x, maximums);
 
     // To avoid the IO failure being ignored silently, we manually call the present function
     root
@@ -282,7 +283,133 @@ fn create_chart(
             }
             "".into()
         })
-        .x_desc("Framework".to_string())
+        .x_label_style(("sans-serif", 20))
+        .y_desc(chart_title)
+        .x_label_style(("sans-serif", 20))
+        .set_all_tick_mark_size(5)
+        .draw()
+        .unwrap()
+    ;
+}
+
+fn create_browser_chart(
+    root: &DrawingArea<BitMapBackend, Shift>,
+    csv_records: &RecordsMap,
+    max_x: i32,
+    maximums: CsvRecord,
+) {
+    // This is necessary because if we only use integer as indices for the X axis,
+    // then plotters will not allow us to put stuff at non-integer coords.
+    // And as float coords do not seem possible, we'll use parts of coords by multiplying by this number:
+    let x_coords_multiplier = 10;
+
+    let apps = csv_records.iter().map(|(app, _records)| { app.clone() }).collect::<Vec<String>>();
+    let mut x_key_points = apps.iter().enumerate().map(|(index, _)| x_coords_multiplier * index as i32).collect::<Vec<i32>>();
+    x_key_points.push(x_key_points.last().unwrap() + x_coords_multiplier);
+    let min_x: i32 = 0;
+
+    let mut min_y = i32::MAX;
+    for (_, records) in csv_records.iter() {
+        for record in records.iter() {
+            if min_y > record.firefox && record.firefox > 0 {
+                min_y = record.firefox;
+            }
+            if min_y > record.chromium && record.chromium > 0 {
+                min_y = record.chromium;
+            }
+            if min_y > record.webkit && record.webkit > 0 {
+                min_y = record.webkit;
+            }
+        }
+    }
+    let min_y = (min_y as f32 * 0.95) as i32;
+
+    let mut max_y = maximums.chromium;
+    if maximums.firefox > max_y {
+        max_y = maximums.firefox;
+    }
+    if maximums.webkit > max_y {
+        max_y = maximums.webkit;
+    }
+
+    // Add 5% to max Y to allow the chart to breathe on the top
+    let max_y = (max_y as f32 * 1.05) as i32;
+
+    let number_of_apps = csv_records.len() as f64;
+
+    let chart_title = "In-browser execution (in ms)";
+
+    let mut chart = ChartBuilder::on(&root)
+        .x_label_area_size(60)
+        .y_label_area_size(60)
+        .margin_top(10)
+        .margin_right(15)
+        .margin_bottom(15)
+        .margin_left(15)
+        .caption(chart_title.clone(), ("sans-serif", 50.0).into_font())
+        // "+1" is here to allow the chart to breathe on the right side.
+        .build_cartesian_2d((min_x..((max_x+1)*x_coords_multiplier)).with_key_points(x_key_points), min_y..max_y)
+        .unwrap()
+    ;
+
+    let mut iter = csv_records.clone();
+    iter.sort_by(|a, b| a.0.cmp(&b.0));
+
+    for (_chart_name, records) in iter {
+        let color1 = HSLColor(0.0, 1.0, 0.5).filled();
+        let color2 = HSLColor(0.333, 1.0, 0.5).filled();
+        let color3 = HSLColor(0.666, 1.0, 0.5).filled();
+
+        chart.draw_series(
+            records.iter()
+                .filter(|record| record.chromium > 0)
+                .map(|record| {
+                PathElement::new(vec![
+                    (x_coords_multiplier * record.index - 1 - 2, record.chromium),
+                    (x_coords_multiplier * record.index + 1 - 2, record.chromium),
+                ], color1.clone())
+            })
+        )
+            .unwrap();
+
+        chart.draw_series(
+            records.iter()
+                .filter(|record| record.webkit > 0)
+                .map(|record| {
+                PathElement::new(vec![
+                    (x_coords_multiplier * record.index - 1, record.webkit),
+                    (x_coords_multiplier * record.index + 1, record.webkit),
+                ], color2.clone())
+            })
+        )
+            .unwrap();
+
+        chart.draw_series(
+            records.iter()
+                .filter(|record| record.firefox > 0)
+                .map(|record| {
+                    PathElement::new(vec![
+                        (x_coords_multiplier * record.index - 1 + 2, record.firefox),
+                        (x_coords_multiplier * record.index + 1 + 2, record.firefox),
+                    ], color3.clone())
+                })
+        )
+            .unwrap();
+    }
+
+    chart
+        .configure_mesh()
+        .light_line_style(&TRANSPARENT)
+        .x_label_formatter(&|v: &i32| {
+            let v = v.clone();
+            for (name, records) in csv_records.clone().iter() {
+                let index = records.get(0).unwrap().index * x_coords_multiplier;
+                if index == v {
+                    return name.clone();
+                }
+            }
+            "".into()
+        })
         .x_label_style(("sans-serif", 20))
         .y_desc(chart_title)
         .x_label_style(("sans-serif", 20))

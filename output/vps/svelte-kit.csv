@@ -1,4 +1,4 @@
-install_time;build_time;deps_with_duplicates;deps_without_duplicates;build_size;
+install_time;build_time;deps_with_duplicates;deps_without_duplicates;build_size;chromium;firefox;webkit
 2732;8396;250;132;112;
 2709;8829;250;132;112;
 2876;9435;250;132;112;
@@ -1702,3 +1702,16 @@ install_time;build_time;deps_with_duplicates;deps_without_duplicates;build_size;
 2891;9165;250;132;112;
 2870;9120;250;132;112;
 2939;9264;250;132;112;
+2814;9244;250;132;112;
+2764;8862;250;132;112;
+2761;8928;250;132;112;
+3228;10061;250;132;112;
+3434;9701;250;132;112;
+2988;9971;250;132;112;
+2971;9384;250;132;112;
+2877;9297;250;132;112;
+2804;9296;250;132;112;
+2846;9167;250;132;112;
+3003;9086;250;132;112;
+2849;9029;250;132;112;
+3215;10641;250;132;112;

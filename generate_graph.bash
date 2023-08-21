@@ -27,14 +27,10 @@ if [[ -z "$OUTPUT_DIR" ]]; then
     exit 1
 fi
 
-if [[ ! -f "${CWD}/graphs/target/release/graphs" ]]; then
-    info_ln "First, building the \"graphs\" binary so we can generate graphs:"
-    cargo build --release --manifest-path=graphs/Cargo.toml
-    info_ln "Done!"
-fi
+info_ln "Building the \"graphs\" binary so we can generate graphs:"
+cargo build --release --manifest-path=graphs/Cargo.toml
+info_ln "Done!"
 
-info_ln "Generating graphs from CSV data in \"${CWD}/${OUTPUT_DIR}\""
-
-cargo run --manifest-path=graphs/Cargo.toml -- "$OUTPUT_DIR"
-
+info_ln "Now Generating graphs from CSV data in \"${CWD}/${OUTPUT_DIR}\""
+"${CWD}/graphs/target/release/graphs" "$OUTPUT_DIR"
 info_ln "Done!"

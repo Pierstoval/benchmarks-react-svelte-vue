@@ -47,6 +47,9 @@ struct CsvRecord {
     deps_with_duplicates: i32,
     deps_without_duplicates: i32,
     build_size: i32,
+    chromium: i32,
+    firefox: i32,
+    webkit: i32,
 }
 
 fn main() {
@@ -140,6 +143,9 @@ fn get_maximums(records_map: &RecordsMap) -> CsvRecord {
         deps_with_duplicates: 0,
         deps_without_duplicates: 0,
         build_size: 0,
+        chromium: 0,
+        firefox: 0,
+        webkit: 0,
     };
 
     for (_chart_name, records) in records_map.iter() {
@@ -158,6 +164,15 @@ fn get_maximums(records_map: &RecordsMap) -> CsvRecord {
             }
             if record.build_size > maximums.build_size {
                 maximums.build_size = record.build_size;
+            }
+            if record.chromium > maximums.chromium {
+                maximums.chromium = record.chromium;
+            }
+            if record.firefox > maximums.firefox {
+                maximums.firefox = record.firefox;
+            }
+            if record.webkit > maximums.webkit {
+                maximums.webkit = record.webkit;
             }
         }
     }

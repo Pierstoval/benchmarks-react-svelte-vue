@@ -173,7 +173,13 @@ process() {
         report=$(< playwright-report/report.json jq -r '.suites[0].specs[] | .tests[0] | "\(.projectName) \(.results[0].duration)"' | sort)
 
         e2e_headers=$(echo "${report}" | awk '{print $1}' | tr '\n' ';' | sed '$ s/;$//')
+        if [[ -z "$e2e_headers" ]]; then
+            e2e_headers="chromium;firefox;webkit" # Just in case...
+        fi
         e2e_times=$(echo "${report}" | awk '{print $2}' | tr '\n' ';' | sed '$ s/;$//')
+        if [[ -z "$e2e_times" ]]; then
+            e2e_times="0;0;0" # Just in case...
+        fi
     end_info_line_with_ok
 
     save_value_to_csv \
@@ -186,7 +192,7 @@ process() {
 # Processing
 #
 
-apps_directories=$(cd apps && for f in *; do if [ -d "$f" ]; then echo "$f" ; fi ; done)
+apps_directories=$(cd "${CWD}/apps" && for f in *; do if [ -d "$f" ]; then echo "$f" ; fi ; done)
 # shellcheck disable=SC2206
 apps_directories_array=($apps_directories)
 

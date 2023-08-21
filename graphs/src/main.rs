@@ -10,9 +10,9 @@ use plotters::chart::ChartBuilder;
 use plotters::coord::Shift;
 use plotters::style::HSLColor;
 use plotters::style::WHITE;
+use plotters::style::TRANSPARENT;
 use plotters::drawing::DrawingArea;
 use plotters::drawing::IntoDrawingArea;
-use plotters::element::Drawable;
 use plotters::element::Circle;
 use plotters::element::PathElement;
 use plotters::prelude::BindKeyPoints;
@@ -84,8 +84,9 @@ fn main() {
 }
 
 fn get_csv_records(output_dir: &String) -> RecordsMap {
-    let mut apps = fs::read_dir("../apps/")
-        .unwrap()
+    let cwd = std::env::current_dir().unwrap();
+    let mut apps = fs::read_dir(cwd.join("apps"))
+        .expect("Could not locate \"apps\" directory.")
         // Resolve paths to OsString to utf8 vector
         .map(|path| path.unwrap().file_name().as_bytes().to_vec())
         // Convert to String
@@ -94,10 +95,12 @@ fn get_csv_records(output_dir: &String) -> RecordsMap {
     ;
     apps.sort();
 
+    let base_csv_path = cwd.join("output");
+
     let mut records = apps
         .iter()
         .map(|app| {
-            let csv_path = format!("../output/{}/{}.csv", output_dir, app);
+            let csv_path = format!("{}/{}/{}.csv", base_csv_path.display(), output_dir, app);
             let app = app.clone();
             let file = File::open(&csv_path).expect(&format!("Could not open csv file {}", csv_path));
             let csv_reader = csv::ReaderBuilder::new()
@@ -253,7 +256,7 @@ fn create_chart(
 
     chart
         .configure_mesh()
-        .light_line_style(&WHITE)
+        .light_line_style(&TRANSPARENT)
         .x_label_formatter(&|v: &i32| {
             let v = v.clone();
             for (name, records) in csv_records.clone().iter() {

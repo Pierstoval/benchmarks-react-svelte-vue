@@ -9,7 +9,7 @@ use csv::Reader;
 use plotters::backend::BitMapBackend;
 use plotters::chart::ChartBuilder;
 use plotters::coord::Shift;
-use plotters::style::HSLColor;
+use plotters::style::{BLACK, HSLColor, TextStyle};
 use plotters::style::WHITE;
 use plotters::style::TRANSPARENT;
 use plotters::drawing::DrawingArea;
@@ -86,8 +86,6 @@ fn main() {
 
     let root = BitMapBackend::new(file_name.as_str(), OUT_IMG_SIZE)
         .into_drawing_area()
-        .titled(title.as_str(), ("sans-serif", 15))
-        .unwrap()
     ;
     root.fill(&WHITE).unwrap();
 
@@ -371,6 +369,13 @@ fn create_browser_chart(
     let max_y = (max_y as f32 * 1.05) as i32;
 
     let chart_title = "In-browser execution (in ms)";
+
+    let x_label_position = (OUT_IMG_SIZE.0 / 5) as i32;
+    let y_label_position = (OUT_IMG_SIZE.1 / 7) as i32;
+
+    root.draw_text("― Chromium", &TextStyle::from(("sans-serif", 20).into_font()).color(&HSLColor(0.0, 1.0, 0.5)), (x_label_position.clone(), y_label_position.clone())).unwrap();
+    root.draw_text("― Webkit", &TextStyle::from(("sans-serif", 20).into_font()).color(&HSLColor(0.333, 1.0, 0.5)), (x_label_position.clone() * 2, y_label_position.clone())).unwrap();
+    root.draw_text("― Firefox", &TextStyle::from(("sans-serif", 20).into_font()).color(&HSLColor(0.666, 1.0, 0.5)), (x_label_position.clone() * 3, y_label_position.clone())).unwrap();
 
     let mut chart = ChartBuilder::on(&root)
         .x_label_area_size(60)

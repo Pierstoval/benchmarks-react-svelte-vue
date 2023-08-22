@@ -27,11 +27,11 @@ The benchmark is lots of build tests and runtime tests that ran on the same mach
 
 Pictured results:
 
-| Server                       | VPS                   | Local machine           |
-|------------------------------|-----------------------|-------------------------|
-| Results                      | ![](./output/vps.png) | ![](./output/local.png) |
-| Number of build benchmarks   | 1871 | 66 |
-| Number of runtime benchmarks | 39 | 62 |
+| Server                       | VPS                         | Local machine                 |
+|------------------------------|-----------------------------|-------------------------------|
+| Results                      | ![](./output/graph_vps.png) | ![](./output/graph_local.png) |
+| Number of build benchmarks   | 1871                        | 66                            |
+| Number of runtime benchmarks | 39                          | 62                            |
 
 ## How to reproduce
 

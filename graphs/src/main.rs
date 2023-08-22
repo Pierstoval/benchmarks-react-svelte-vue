@@ -270,19 +270,23 @@ fn create_chart(
         match point_display_type {
             PointDisplayType::Bar => {
                 chart.draw_series(
-                    records.iter().map(|record| {
-                        let y_value = value_function(record);
-                        Rectangle::new([
-                           (x_coords_multiplier * record.index - 2, 0),
-                           (x_coords_multiplier * record.index + 2, y_value),
-                       ], color.clone())
-                    })
+                    records.iter()
+                        .filter(|record| value_function(record) > 0)
+                        .map(|record| {
+                            let y_value = value_function(record);
+                            Rectangle::new([
+                               (x_coords_multiplier * record.index - 2, 0),
+                               (x_coords_multiplier * record.index + 2, y_value),
+                           ], color.clone())
+                        })
                 )
                     .unwrap();
             }
             PointDisplayType::Circle => {
                 chart.draw_series(
-                    records.iter().map(|record| {
+                    records.iter()
+                        .filter(|record| value_function(record) > 0)
+                        .map(|record| {
                         let y_value = value_function(record);
                         Circle::new((x_coords_multiplier * record.index, y_value), 5, color.clone())
                     })
@@ -291,7 +295,9 @@ fn create_chart(
             }
             PointDisplayType::HorizontalLine => {
                 chart.draw_series(
-                    records.iter().map(|record| {
+                    records.iter()
+                        .filter(|record| value_function(record) > 0)
+                        .map(|record| {
                         let y_value = value_function(record);
                         PathElement::new(vec![
                             (x_coords_multiplier * record.index - 3, y_value), // Left

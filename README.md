@@ -30,8 +30,8 @@ Pictured results:
 | Server                       | VPS                         | Local machine                 |
 |------------------------------|-----------------------------|-------------------------------|
 | Results                      | ![](./output/graph_vps.png) | ![](./output/graph_local.png) |
-| Number of build benchmarks   | 1871                        | 66                            |
-| Number of runtime benchmarks | 39                          | 62                            |
+| Number of build benchmarks   | 1871 | 105 |
+| Number of runtime benchmarks | 39 | 101 |
 
 ## How to reproduce
 

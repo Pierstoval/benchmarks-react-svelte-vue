@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use clap::Arg;
 use clap::command;
-use std::fs;
+use std::{env, fs};
 use std::fs::File;
+use std::io::Write;
 use std::os::unix::ffi::OsStrExt;
 use csv::Reader;
 use plotters::backend::BitMapBackend;
@@ -14,14 +15,14 @@ use plotters::style::TRANSPARENT;
 use plotters::drawing::DrawingArea;
 use plotters::drawing::IntoDrawingArea;
 use plotters::element::Circle;
+use plotters::element::Rectangle;
 use plotters::element::PathElement;
 use plotters::prelude::BindKeyPoints;
 use plotters::style::IntoFont;
 use plotters::style::Color;
 use serde::Deserialize;
 
-const OUT_FILE_NAME: &'static str = "graph.png";
-const OUT_IMG_SIZE: (u32, u32) = (1000, 1500);
+const OUT_IMG_SIZE: (u32, u32) = (800, 1500);
 
 type RecordsMap = Vec<(String, Vec<CsvRecord>)>;
 
@@ -36,6 +37,7 @@ enum ChartType {
 enum PointDisplayType {
     Circle,
     HorizontalLine,
+    Bar,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -55,16 +57,38 @@ struct CsvRecord {
 fn main() {
     let matches = command!() // requires `cargo` feature
         .arg(Arg::new("output_dir"))
-        .arg_required_else_help(true)
         .get_matches();
 
-    let output_dir: Option<&String> = matches.get_one("output_dir");
+    let mut output_dir: Option<String> = None;
+
+    let out_dir_from_args: Option<&String> = matches.get_one("output_dir");
+
+    if let Some(out_dir_from_args) = out_dir_from_args {
+        output_dir = Some(out_dir_from_args.clone());
+    } else {
+        if let Ok(out_dir_from_env) = std::env::var("OUTPUT_DIR") {
+            output_dir = Some(out_dir_from_env.clone());
+        }
+    }
+
+    if output_dir.is_none() {
+        std::io::stderr().write("Error: please specify the \"output_dir\" first argument, or use the \"OUTPUT_DIR\" environment variable.".as_ref()).unwrap();
+        std::process::exit(1);
+    }
+
     let output_dir = output_dir.unwrap();
 
-    let records_map = get_csv_records(output_dir);
+    let cwd = std::env::current_dir().unwrap();
 
-    let root = BitMapBackend::new(OUT_FILE_NAME, OUT_IMG_SIZE)
-        .into_drawing_area();
+    let records_map = get_csv_records(output_dir.clone());
+    let file_name = cwd.join("output").join(format!("graph_{}.png", output_dir)).display().to_string();
+    let title = format!("Benchmarks for {}", output_dir);
+
+    let root = BitMapBackend::new(file_name.as_str(), OUT_IMG_SIZE)
+        .into_drawing_area()
+        .titled(title.as_str(), ("sans-serif", 15))
+        .unwrap()
+    ;
     root.fill(&WHITE).unwrap();
 
     let maximums = get_maximums(&records_map);
@@ -75,9 +99,9 @@ fn main() {
 
     create_chart(&roots.get(0).unwrap(), &records_map, max_x, 0, maximums.install_time, PointDisplayType::HorizontalLine, ChartType::InstallTime);
     create_chart(&roots.get(1).unwrap(), &records_map, max_x, 0, maximums.build_time, PointDisplayType::HorizontalLine, ChartType::BuildTime);
-    create_chart(&roots.get(2).unwrap(), &records_map, max_x, 0, maximums.build_size, PointDisplayType::Circle, ChartType::BuildSize);
-    create_chart(&roots.get(3).unwrap(), &records_map, max_x, 0, maximums.deps_with_duplicates, PointDisplayType::Circle, ChartType::DepsWithDuplicates);
-    create_chart(&roots.get(4).unwrap(), &records_map, max_x, 0, maximums.deps_without_duplicates, PointDisplayType::Circle, ChartType::DepsWithoutDuplicates);
+    create_chart(&roots.get(2).unwrap(), &records_map, max_x, 0, maximums.build_size, PointDisplayType::Bar, ChartType::BuildSize);
+    create_chart(&roots.get(3).unwrap(), &records_map, max_x, 0, maximums.deps_with_duplicates, PointDisplayType::Bar, ChartType::DepsWithDuplicates);
+    create_chart(&roots.get(4).unwrap(), &records_map, max_x, 0, maximums.deps_without_duplicates, PointDisplayType::Bar, ChartType::DepsWithoutDuplicates);
     create_browser_chart(&roots.get(5).unwrap(), &records_map, max_x, maximums);
 
     // To avoid the IO failure being ignored silently, we manually call the present function
@@ -87,7 +111,7 @@ fn main() {
     ;
 }
 
-fn get_csv_records(output_dir: &String) -> RecordsMap {
+fn get_csv_records(output_dir: String) -> RecordsMap {
     let cwd = std::env::current_dir().unwrap();
     let mut apps = fs::read_dir(cwd.join("apps"))
         .expect("Could not locate \"apps\" directory.")
@@ -220,7 +244,7 @@ fn create_chart(
         .margin_right(15)
         .margin_bottom(15)
         .margin_left(15)
-        .caption(chart_title.clone(), ("sans-serif", 50.0).into_font())
+        .caption(chart_title.clone(), ("sans-serif", 20.0).into_font())
         // "+1" is here to allow the chart to breathe on the right side.
         .build_cartesian_2d((min_x..((max_x+1)*x_coords_multiplier)).with_key_points(x_key_points), min_y..max_y)
         .unwrap()
@@ -246,6 +270,18 @@ fn create_chart(
         };
 
         match point_display_type {
+            PointDisplayType::Bar => {
+                chart.draw_series(
+                    records.iter().map(|record| {
+                        let y_value = value_function(record);
+                        Rectangle::new([
+                           (x_coords_multiplier * record.index - 2, 0),
+                           (x_coords_multiplier * record.index + 2, y_value),
+                       ], color.clone())
+                    })
+                )
+                    .unwrap();
+            }
             PointDisplayType::Circle => {
                 chart.draw_series(
                     records.iter().map(|record| {
@@ -283,9 +319,8 @@ fn create_chart(
             }
             "".into()
         })
-        .x_label_style(("sans-serif", 20))
         .y_desc(chart_title)
-        .x_label_style(("sans-serif", 20))
+        .x_label_style(("sans-serif", 15))
         .set_all_tick_mark_size(5)
         .draw()
         .unwrap()
@@ -301,7 +336,7 @@ fn create_browser_chart(
     // This is necessary because if we only use integer as indices for the X axis,
     // then plotters will not allow us to put stuff at non-integer coords.
     // And as float coords do not seem possible, we'll use parts of coords by multiplying by this number:
-    let x_coords_multiplier = 10;
+    let x_coords_multiplier = 100;
 
     let apps = csv_records.iter().map(|(app, _records)| { app.clone() }).collect::<Vec<String>>();
     let mut x_key_points = apps.iter().enumerate().map(|(index, _)| x_coords_multiplier * index as i32).collect::<Vec<i32>>();
@@ -335,8 +370,6 @@ fn create_browser_chart(
     // Add 5% to max Y to allow the chart to breathe on the top
     let max_y = (max_y as f32 * 1.05) as i32;
 
-    let number_of_apps = csv_records.len() as f64;
-
     let chart_title = "In-browser execution (in ms)";
 
     let mut chart = ChartBuilder::on(&root)
@@ -346,7 +379,7 @@ fn create_browser_chart(
         .margin_right(15)
         .margin_bottom(15)
         .margin_left(15)
-        .caption(chart_title.clone(), ("sans-serif", 50.0).into_font())
+        .caption(chart_title.clone(), ("sans-serif", 20.0).into_font())
         // "+1" is here to allow the chart to breathe on the right side.
         .build_cartesian_2d((min_x..((max_x+1)*x_coords_multiplier)).with_key_points(x_key_points), min_y..max_y)
         .unwrap()
@@ -356,18 +389,15 @@ fn create_browser_chart(
     iter.sort_by(|a, b| a.0.cmp(&b.0));
 
     for (_chart_name, records) in iter {
-        let color1 = HSLColor(0.0, 1.0, 0.5).filled();
-        let color2 = HSLColor(0.333, 1.0, 0.5).filled();
-        let color3 = HSLColor(0.666, 1.0, 0.5).filled();
 
         chart.draw_series(
             records.iter()
                 .filter(|record| record.chromium > 0)
                 .map(|record| {
                 PathElement::new(vec![
-                    (x_coords_multiplier * record.index - 1 - 2, record.chromium),
-                    (x_coords_multiplier * record.index + 1 - 2, record.chromium),
-                ], color1.clone())
+                    (x_coords_multiplier * record.index - 10 - 23, record.chromium),
+                    (x_coords_multiplier * record.index + 10 - 23, record.chromium),
+                ], HSLColor(0.0, 1.0, 0.5).filled().stroke_width(0))
             })
         )
             .unwrap();
@@ -377,9 +407,9 @@ fn create_browser_chart(
                 .filter(|record| record.webkit > 0)
                 .map(|record| {
                 PathElement::new(vec![
-                    (x_coords_multiplier * record.index - 1, record.webkit),
-                    (x_coords_multiplier * record.index + 1, record.webkit),
-                ], color2.clone())
+                    (x_coords_multiplier * record.index - 10, record.webkit),
+                    (x_coords_multiplier * record.index + 10, record.webkit),
+                ], HSLColor(0.333, 1.0, 0.5).filled().stroke_width(0))
             })
         )
             .unwrap();
@@ -389,9 +419,9 @@ fn create_browser_chart(
                 .filter(|record| record.firefox > 0)
                 .map(|record| {
                     PathElement::new(vec![
-                        (x_coords_multiplier * record.index - 1 + 2, record.firefox),
-                        (x_coords_multiplier * record.index + 1 + 2, record.firefox),
-                    ], color3.clone())
+                        (x_coords_multiplier * record.index - 10 + 23, record.firefox),
+                        (x_coords_multiplier * record.index + 10 + 23, record.firefox),
+                    ], HSLColor(0.666, 1.0, 0.5).filled().stroke_width(0))
                 })
         )
             .unwrap();
@@ -410,9 +440,8 @@ fn create_browser_chart(
             }
             "".into()
         })
-        .x_label_style(("sans-serif", 20))
         .y_desc(chart_title)
-        .x_label_style(("sans-serif", 20))
+        .x_label_style(("sans-serif", 15))
         .set_all_tick_mark_size(5)
         .draw()
         .unwrap()

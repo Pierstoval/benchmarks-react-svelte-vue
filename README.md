@@ -19,26 +19,26 @@ I deliberately chose to not use external libraries to compare the frameworks in 
 
 ## Current results
 
-This graph was generated using the [gnuplot](http://www.gnuplot.info/) tool, you can check this project's [graph.gnuplot](./graph.gnuplot) file to see how it was generated.
+This graph was generated using the [plotters](https://plotters-rs.github.io/rustdoc/plotters/index.html) tool in Rust, you can check this project's [main.rs](./graphs/src/main.rs) file to see how it was generated.
 
-The benchmark is roughly a thousands of build tests and hundreds of runtime tests ran on the same machine, a small dedicated server, so the most important here is to **not compare time, but proportions instead** (except for build size which is consistent over all platforms, hence the simple bar chart).
+The benchmark is lots of build tests and runtime tests that ran on the same machine, a small dedicated server, so the most important here is to **not compare time, but proportions instead** (except for build size which is consistent over all platforms, hence the simple bar chart).
 
 ---
 
 Pictured results:
 
-| Server                       | Dedicated server       | VPS                   | Local machine           |
-|------------------------------|------------------------|-----------------------|-------------------------|
-| Results                      | ![](./output/dedi-2023-07.png) | ![](./output/vps.png) | ![](./output/local.png) |
-| Number of build benchmarks   | 1388 | 1490 | 245 |
-| Number of runtime benchmarks | 1387 | 1489 | 22 |
+| Server                       | VPS                   | Local machine           |
+|------------------------------|-----------------------|-------------------------|
+| Results                      | ![](./output/vps.png) | ![](./output/local.png) |
+| Number of build benchmarks   | 1871 | 66 |
+| Number of runtime benchmarks | 39 | 62 |
 
 ## How to reproduce
 
 You need several tools:
 
-* [processtime](https://crates.io/crates/processtime), a very small binary that calculates execution time with a computer-usable output.<br>You can quickly install it by [installing the Rust langauge](https://www.rust-lang.org/fr) and running `cargo install processtime`.
-* [gnuplot](http://www.gnuplot.info/), which is available in most linux platforms via your favourite package manager.
+* [Rust](https://www.rust-lang.org/tools/install), to generate the graphs.
+* [processtime](https://crates.io/crates/processtime), a very small binary that calculates execution time with a computer-usable output.<br>You can quickly install it by installing the Rust language and running `cargo install processtime`.
 * [Node.js](http://nodejs.org/) and the [yarn](https://yarnpkg.com/) package manager.
 * Set up [Playwright](https://playwright.dev/) (see below), for runtime performance benchmark.
 * [jq](https://stedolan.github.io/jq/), to gather Playwright results that are stored in JSON.

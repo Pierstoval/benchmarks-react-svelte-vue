@@ -56,19 +56,59 @@ yarn playwright install
 
 ### Generation process
 
-There are **two scripts** depending on the benchmark you're looking for.
+There are **3 scripts** depending to generate everything for the benchmarks
 
-1. First, create the `OUTPUT_FILE` environment variable, it will determine where your output files will be stored (CSV and plot images).
-2. The `./test.bash` script runs a `build` test. It cleans up directories, installs Node.js dependencies via Yarn, and builds the apps as a static web application, and output the results to the `results.csv` file.
-3. The `./runtime_test.bash` script runs a `runtime` test. It makes sure apps are built as static sites, build them if they're not, use `playwright` to start a web server for each app, run the benchmarks, and output the results to the `results_runtime.csv` file. 
-4. The `./suite.bash` script runs both `test.bash` and `runtime_test.bash` consecutively. It is a helper to run all tests at once. 
+#### Script 1: generate performance data
 
-If you reproduce, I recommend you to customize the `OUTPUT_FILE` environment variable to something different than the existing files (which are `dedi`, `vps` and `local`) so that your data is more consistent. We cannot really use the data from different sources, as performance might be really different across platforms.
+First you need to **name** the output directory you want in the `output/` dir. There are already two directories, `vps` and `local`, each representing the current data that I generated while working on these benchmarks, but you can create another one, as you want.
 
-> Note: remember to **keep the first line** of the CSV files. It serves as headers for the graphs.
+Then, run the `./bench_it_all.bash` script and add the output directory name with one of these methods:
 
-Next, once you have enough data in your set, run the `gnuplot graph.gnuplot` command.
+```bash
+./bench_it_all.bash my_output_dir
 
-Depending on the size of your data set, generating the graph might take some time, so please be patient 😉. On my servers, the whole suite takes between 4 and 9 minutes.
+# Or:
+OUTPUT_DIR=my_output_dir ./bench_it_all.bash
 
-Then, you can enjoy visualizing the results on the output png file!
+# Or even:
+export OUTPUT_DIR=my_output_dir
+./bench_it_all.bash
+```
+
+This will create a `output/my_output_dir/` directory where you will find all the **latest** logs (only the latest, not all, to avoid bloating your hard drive with useless logs), as well as the actual data in the CSV files.
+
+#### Script 2: generate image graphs
+
+Once you have all the requirements, run the generation script followed by the output directory you specified earlier. If you have exported the `OUTPUT_DIR` var, the script will reuse it.
+
+Like in the previous chapter, here are usage examples:
+
+```bash
+./generate_graph.bash my_output_dir
+
+# Or:
+OUTPUT_DIR=my_output_dir ./generate_graph.bash
+
+# Or even:
+export OUTPUT_DIR=my_output_dir
+./generate_graph.bash
+```
+
+This will create a `output/graph_my_output_dir.png` image file that contains the graphs generated with your custom data.
+
+#### Script 3: update the readme with "vps" and "local" data
+
+If at some point you wanted to reuse the `vps` or `local` data for checks, you could use the readme script update in which these datasets are hardcoded in order to link the graphs in the README.md file.
+
+The main goal of this script is to update the amount of tests that were executed for each dataset. Nothing really special apart that.
+
+Usage:
+
+```
+./update_readme_results.bash
+```
+
+### License
+
+This project is under the AGPL-3.0 license, so reusability across any other machine or computer requires you to publish your modifications publicly with the exact same license if you do so.<br>
+Best solution is to provide an issue or a pull-request to this repository.

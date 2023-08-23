@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use clap::Arg;
 use clap::command;
-use std::{env, fs};
+use std::env;
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::os::unix::ffi::OsStrExt;
@@ -9,7 +10,8 @@ use csv::Reader;
 use plotters::backend::BitMapBackend;
 use plotters::chart::ChartBuilder;
 use plotters::coord::Shift;
-use plotters::style::{BLACK, HSLColor, TextStyle};
+use plotters::style::HSLColor;
+use plotters::style::TextStyle;
 use plotters::style::WHITE;
 use plotters::style::TRANSPARENT;
 use plotters::drawing::DrawingArea;
@@ -26,18 +28,43 @@ const OUT_IMG_SIZE: (u32, u32) = (800, 1500);
 
 type RecordsMap = Vec<(String, Vec<CsvRecord>)>;
 
+#[derive(PartialEq)]
+enum ShowMeans {
+    True,
+    False,
+}
+
+#[derive(Debug, Hash, Eq, Copy, Clone)]
 enum ChartType {
     InstallTime,
     BuildTime,
     DepsWithDuplicates,
     DepsWithoutDuplicates,
     BuildSize,
+    Chromium,
+    Firefox,
+    Webkit,
 }
+impl PartialEq for ChartType {
+    fn eq(&self, other: &Self) -> bool {
+        self == other
+    }
+}
+
 
 enum PointDisplayType {
     Circle,
     HorizontalLine,
     Bar,
+}
+
+#[derive(Debug)]
+struct Means {
+    min: i32,
+    q1: i32,
+    median: i32,
+    q2: i32,
+    max: i32,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -82,7 +109,7 @@ fn main() {
 
     let records_map = get_csv_records(output_dir.clone());
     let file_name = cwd.join("output").join(format!("graph_{}.png", output_dir)).display().to_string();
-    let title = format!("Benchmarks for {}", output_dir);
+    // let title = format!("Benchmarks for {}", output_dir);
 
     let root = BitMapBackend::new(file_name.as_str(), OUT_IMG_SIZE)
         .into_drawing_area()
@@ -95,11 +122,11 @@ fn main() {
 
     let roots = root.split_evenly((6, 1));
 
-    create_chart(&roots.get(0).unwrap(), &records_map, max_x, 0, maximums.install_time, PointDisplayType::HorizontalLine, ChartType::InstallTime);
-    create_chart(&roots.get(1).unwrap(), &records_map, max_x, 0, maximums.build_time, PointDisplayType::HorizontalLine, ChartType::BuildTime);
-    create_chart(&roots.get(2).unwrap(), &records_map, max_x, 0, maximums.build_size, PointDisplayType::Bar, ChartType::BuildSize);
-    create_chart(&roots.get(3).unwrap(), &records_map, max_x, 0, maximums.deps_with_duplicates, PointDisplayType::Bar, ChartType::DepsWithDuplicates);
-    create_chart(&roots.get(4).unwrap(), &records_map, max_x, 0, maximums.deps_without_duplicates, PointDisplayType::Bar, ChartType::DepsWithoutDuplicates);
+    create_chart(&roots.get(0).unwrap(), &records_map, max_x, 0, maximums.install_time, PointDisplayType::HorizontalLine, ChartType::InstallTime, ShowMeans::True);
+    create_chart(&roots.get(1).unwrap(), &records_map, max_x, 0, maximums.build_time, PointDisplayType::HorizontalLine, ChartType::BuildTime, ShowMeans::True);
+    create_chart(&roots.get(2).unwrap(), &records_map, max_x, 0, maximums.build_size, PointDisplayType::Bar, ChartType::BuildSize, ShowMeans::False);
+    create_chart(&roots.get(3).unwrap(), &records_map, max_x, 0, maximums.deps_with_duplicates, PointDisplayType::Bar, ChartType::DepsWithDuplicates, ShowMeans::False);
+    create_chart(&roots.get(4).unwrap(), &records_map, max_x, 0, maximums.deps_without_duplicates, PointDisplayType::Bar, ChartType::DepsWithoutDuplicates, ShowMeans::False);
     create_browser_chart(&roots.get(5).unwrap(), &records_map, max_x, maximums);
 
     // To avoid the IO failure being ignored silently, we manually call the present function
@@ -107,6 +134,34 @@ fn main() {
         .present()
         .expect("Unable to write result to file")
     ;
+}
+
+fn get_means_from_records(records: &Vec<CsvRecord>, data_type: ChartType) -> Means {
+    let mut filtered: Vec<i32> = records.iter().map(|record| {
+        match data_type {
+            ChartType::InstallTime => record.install_time,
+            ChartType::BuildTime => record.build_time,
+            ChartType::DepsWithDuplicates => record.deps_with_duplicates,
+            ChartType::DepsWithoutDuplicates => record.deps_without_duplicates,
+            ChartType::BuildSize => record.build_size,
+            ChartType::Chromium => record.chromium,
+            ChartType::Firefox => record.firefox,
+            ChartType::Webkit => record.webkit,
+        }
+    })
+        .collect();
+    filtered.sort();
+
+    let sorted = filtered;
+    let len = sorted.len();
+
+    Means {
+        min: sorted.first().unwrap().clone(),
+        q1: sorted.get((len / 4) as usize).unwrap().clone() as i32,
+        median: sorted.get((len / 2) as usize).unwrap().clone() as i32,
+        q2: sorted.get((len * 3 / 4) as usize).unwrap().clone() as i32,
+        max: sorted.last().unwrap().clone(),
+    }
 }
 
 fn get_csv_records(output_dir: String) -> RecordsMap {
@@ -211,6 +266,7 @@ fn create_chart(
     max_y: i32,
     point_display_type: PointDisplayType,
     chart_type: ChartType,
+    show_means: ShowMeans
 ) {
     // This is necessary because if we only use integer as indices for the X axis,
     // then plotters will not allow us to put stuff at non-integer coords.
@@ -233,6 +289,7 @@ fn create_chart(
         ChartType::DepsWithDuplicates => "Deps with duplicates",
         ChartType::DepsWithoutDuplicates => "Deps without duplicates",
         ChartType::BuildSize => "Build size (in KB)",
+        _ => panic!("Browser charts are not supposed to be rendered in the \"create_chart\" function.")
     }.to_string();
 
     let mut chart = ChartBuilder::on(&root)
@@ -264,6 +321,7 @@ fn create_chart(
                 ChartType::DepsWithDuplicates => record.deps_with_duplicates,
                 ChartType::DepsWithoutDuplicates => record.deps_without_duplicates,
                 ChartType::BuildSize => record.build_size,
+                _ => panic!("Browser charts are not supposed to be rendered in the \"create_chart\" function.")
             }
         };
 
@@ -308,6 +366,12 @@ fn create_chart(
                     .unwrap();
             }
         };
+
+        if show_means == ShowMeans::True {
+            let means = get_means_from_records(&records, chart_type);
+            println!("TODO: means");
+        }
+
     }
 
     chart

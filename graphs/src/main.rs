@@ -10,13 +10,14 @@ use csv::Reader;
 use plotters::backend::BitMapBackend;
 use plotters::chart::ChartBuilder;
 use plotters::coord::Shift;
+use plotters::data::Quartiles;
 use plotters::style::HSLColor;
 use plotters::style::TextStyle;
 use plotters::style::WHITE;
 use plotters::style::TRANSPARENT;
 use plotters::drawing::DrawingArea;
 use plotters::drawing::IntoDrawingArea;
-use plotters::element::Circle;
+use plotters::element::Boxplot;
 use plotters::element::Rectangle;
 use plotters::element::PathElement;
 use plotters::prelude::BindKeyPoints;
@@ -53,7 +54,6 @@ impl PartialEq for ChartType {
 
 
 enum PointDisplayType {
-    Circle,
     HorizontalLine,
     Bar,
 }
@@ -63,8 +63,20 @@ struct Means {
     min: i32,
     q1: i32,
     median: i32,
-    q2: i32,
+    q3: i32,
     max: i32,
+}
+
+impl Means {
+    fn to_vec(&self) -> Vec<i32> {
+        vec![
+            self.min,
+            self.q1,
+            self.median,
+            self.q3,
+            self.max,
+        ]
+    }
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -159,7 +171,7 @@ fn get_means_from_records(records: &Vec<CsvRecord>, data_type: ChartType) -> Mea
         min: sorted.first().unwrap().clone(),
         q1: sorted.get((len / 4) as usize).unwrap().clone() as i32,
         median: sorted.get((len / 2) as usize).unwrap().clone() as i32,
-        q2: sorted.get((len * 3 / 4) as usize).unwrap().clone() as i32,
+        q3: sorted.get((len * 3 / 4) as usize).unwrap().clone() as i32,
         max: sorted.last().unwrap().clone(),
     }
 }
@@ -340,17 +352,6 @@ fn create_chart(
                 )
                     .unwrap();
             }
-            PointDisplayType::Circle => {
-                chart.draw_series(
-                    records.iter()
-                        .filter(|record| value_function(record) > 0)
-                        .map(|record| {
-                        let y_value = value_function(record);
-                        Circle::new((x_coords_multiplier * record.index, y_value), 5, color.clone())
-                    })
-                )
-                    .unwrap();
-            }
             PointDisplayType::HorizontalLine => {
                 chart.draw_series(
                     records.iter()
@@ -367,9 +368,17 @@ fn create_chart(
             }
         };
 
+        let index = records.get(0).unwrap().index;
+        let percentage = index as f64 / number_of_apps;
+        let color = HSLColor(percentage.into(), 1.0, 0.5).filled();
+
         if show_means == ShowMeans::True {
             let means = get_means_from_records(&records, chart_type);
-            println!("TODO: means");
+            let means_vec = means.to_vec();
+            let quartiles = Quartiles::new(&means_vec);
+            // let boxplot = Boxplot::new_horizontal(index, &quartiles);
+            let boxplot = Boxplot::new_vertical(index, &quartiles);
+            chart.draw_series(vec![boxplot]).unwrap();
         }
 
     }

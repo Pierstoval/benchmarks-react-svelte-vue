@@ -376,11 +376,8 @@ fn create_chart(
             }
         };
 
-        let index = records.get(0).unwrap().index;
-        let percentage = index as f64 / number_of_apps;
-        let color = HSLColor(percentage.into(), 1.0, 0.5).filled();
-
         if show_means == ShowMeans::True {
+            let index = records.get(0).unwrap().index;
             let means = get_means_from_records(&records, chart_type);
             let means_vec = means.to_vec();
             let quartiles = Quartiles::new(&means_vec);

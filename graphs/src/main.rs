@@ -8,24 +8,28 @@ use std::io::Write;
 use std::os::unix::ffi::OsStrExt;
 use csv::Reader;
 use plotters::backend::BitMapBackend;
-use plotters::chart::ChartBuilder;
+use plotters::chart::{ChartBuilder, ChartContext};
+use plotters::coord::combinators::WithKeyPoints;
 use plotters::coord::Shift;
-use plotters::data::Quartiles;
+use plotters::coord::types::{RangedCoordf32, RangedCoordi32};
+use plotters::style::BLACK;
 use plotters::style::HSLColor;
 use plotters::style::TextStyle;
 use plotters::style::WHITE;
 use plotters::style::TRANSPARENT;
 use plotters::drawing::DrawingArea;
 use plotters::drawing::IntoDrawingArea;
-use plotters::element::Boxplot;
+use plotters::element::CandleStick;
 use plotters::element::Rectangle;
 use plotters::element::PathElement;
-use plotters::prelude::BindKeyPoints;
+use plotters::prelude::{BindKeyPoints, Cartesian2d};
 use plotters::style::IntoFont;
 use plotters::style::Color;
 use serde::Deserialize;
 
 const OUT_IMG_SIZE: (u32, u32) = (600, 1800);
+
+const X_COORDS_MULTIPLIER: i32 = 100;
 
 type RecordsMap = Vec<(String, Vec<CsvRecord>)>;
 
@@ -65,18 +69,6 @@ struct Means {
     median: f32,
     q3: f32,
     max: f32,
-}
-
-impl Means {
-    fn to_vec(&self) -> Vec<f64> {
-        vec![
-            self.min as f64,
-            self.q1 as f64,
-            self.median as f64,
-            self.q3 as f64,
-            self.max as f64,
-        ]
-    }
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -170,9 +162,8 @@ fn get_means_from_records(records: &Vec<CsvRecord>, data_type: ChartType) -> Mea
 
     let q1 = sorted.get(len / 4).unwrap().clone() as f32;
     let q3 = sorted.get(len * 3 / 4).unwrap().clone() as f32;
-    let iqr = q3 - q1;
-    let min = q1 - iqr * 1.5;
-    let max = q3 + iqr * 1.5;
+    let min = sorted.first().unwrap().clone() as f32;
+    let max = sorted.last().unwrap().clone() as f32;
     let median = sorted.get(len / 2).unwrap().clone() as f32;
 
     Means {
@@ -288,14 +279,9 @@ fn create_chart(
     chart_type: ChartType,
     show_means: ShowMeans
 ) {
-    // This is necessary because if we only use integer as indices for the X axis,
-    // then plotters will not allow us to put stuff at non-integer coords.
-    // And as float coords do not seem possible, we'll use parts of coords by multiplying by this number:
-    let x_coords_multiplier = 10;
-
     let apps = csv_records.iter().map(|(app, _records)| { app.clone() }).collect::<Vec<String>>();
-    let mut x_key_points = apps.iter().enumerate().map(|(index, _)| x_coords_multiplier * index as i32).collect::<Vec<i32>>();
-    x_key_points.push(x_key_points.last().unwrap() + x_coords_multiplier);
+    let mut x_key_points = apps.iter().enumerate().map(|(index, _)| X_COORDS_MULTIPLIER * index as i32).collect::<Vec<i32>>();
+    x_key_points.push(x_key_points.last().unwrap() + X_COORDS_MULTIPLIER);
     let min_x: i32 = 0;
 
     // Add 5% to max Y to allow the chart to breathe on the top
@@ -321,7 +307,7 @@ fn create_chart(
         .margin_left(15)
         .caption(chart_title.clone(), ("sans-serif", 20.0).into_font())
         // "+1" is here to allow the chart to breathe on the right side.
-        .build_cartesian_2d((min_x..((max_x+1)*x_coords_multiplier)).with_key_points(x_key_points), min_y..max_y)
+        .build_cartesian_2d((min_x..((max_x+1)*X_COORDS_MULTIPLIER)).with_key_points(x_key_points), min_y..max_y)
         .unwrap()
     ;
 
@@ -353,8 +339,8 @@ fn create_chart(
                         .map(|record| {
                             let y_value = value_function(record);
                             Rectangle::new([
-                               (x_coords_multiplier * record.index - 2, 0.0),
-                               (x_coords_multiplier * record.index + 2, y_value),
+                               (X_COORDS_MULTIPLIER * record.index - 20, 0.0),
+                               (X_COORDS_MULTIPLIER * record.index + 20, y_value),
                            ], color.clone())
                         })
                 )
@@ -367,8 +353,8 @@ fn create_chart(
                         .map(|record| {
                         let y_value = value_function(record);
                         PathElement::new(vec![
-                            (x_coords_multiplier * record.index - 3, y_value), // Left
-                            (x_coords_multiplier * record.index + 3, y_value), // Right
+                            (X_COORDS_MULTIPLIER * record.index - 30, y_value), // Left
+                            (X_COORDS_MULTIPLIER * record.index + 30, y_value), // Right
                         ], color.clone())
                     })
                 )
@@ -377,14 +363,8 @@ fn create_chart(
         };
 
         if show_means == ShowMeans::True {
-            let index = records.get(0).unwrap().index;
-            let means = get_means_from_records(&records, chart_type);
-            let means_vec = means.to_vec();
-            let quartiles = Quartiles::new(&means_vec);
-            let boxplot = Boxplot::new_vertical(index * x_coords_multiplier, &quartiles);
-            chart.draw_series(vec![boxplot]).unwrap();
+            draw_candlesticks(&mut chart, records.get(0).unwrap().index * X_COORDS_MULTIPLIER, get_means_from_records(&records, chart_type), 7);
         }
-
     }
 
     chart
@@ -393,7 +373,7 @@ fn create_chart(
         .x_label_formatter(&|v: &i32| {
             let v = v.clone();
             for (name, records) in csv_records.clone().iter() {
-                let index = records.get(0).unwrap().index * x_coords_multiplier;
+                let index = records.get(0).unwrap().index * X_COORDS_MULTIPLIER;
                 if index == v {
                     return name.clone();
                 }
@@ -417,11 +397,9 @@ fn create_browser_chart(
     // This is necessary because if we only use integer as indices for the X axis,
     // then plotters will not allow us to put stuff at non-integer coords.
     // And as float coords do not seem possible, we'll use parts of coords by multiplying by this number:
-    let x_coords_multiplier = 100;
-
     let apps = csv_records.iter().map(|(app, _records)| { app.clone() }).collect::<Vec<String>>();
-    let mut x_key_points = apps.iter().enumerate().map(|(index, _)| x_coords_multiplier * index as i32).collect::<Vec<i32>>();
-    x_key_points.push(x_key_points.last().unwrap() + x_coords_multiplier);
+    let mut x_key_points = apps.iter().enumerate().map(|(index, _)| X_COORDS_MULTIPLIER * index as i32).collect::<Vec<i32>>();
+    x_key_points.push(x_key_points.last().unwrap() + X_COORDS_MULTIPLIER);
     let min_x: i32 = 0;
 
     let mut min_y = f32::MAX;
@@ -468,7 +446,7 @@ fn create_browser_chart(
         .margin_left(15)
         .caption(chart_title.clone(), ("sans-serif", 20.0).into_font())
         // "+1" is here to allow the chart to breathe on the right side.
-        .build_cartesian_2d((min_x..((max_x+1)*x_coords_multiplier)).with_key_points(x_key_points), min_y..max_y)
+        .build_cartesian_2d((min_x..((max_x+1)*X_COORDS_MULTIPLIER)).with_key_points(x_key_points), min_y..max_y)
         .unwrap()
     ;
 
@@ -476,63 +454,9 @@ fn create_browser_chart(
     iter.sort_by(|a, b| a.0.cmp(&b.0));
 
     for (_chart_name, records) in iter {
-        let mut firefox_index = 0;
-        let mut chromium_index = 0;
-        let mut webkit_index = 0;
-
-        chart.draw_series(
-            records.iter()
-                .filter(|record| record.chromium > 0.0)
-                .map(|record| {
-                    if chromium_index == 0 { chromium_index = record.index; }
-                    PathElement::new(vec![
-                        (x_coords_multiplier * record.index - 5 - 23, record.chromium),
-                        (x_coords_multiplier * record.index + 5 - 23, record.chromium),
-                    ], HSLColor(0.0, 1.0, 0.5).filled().stroke_width(0))
-                })
-        )
-            .unwrap();
-        let means = get_means_from_records(&records, ChartType::Chromium);
-        let means_vec = means.to_vec();
-        let quartiles = Quartiles::new(&means_vec);
-        let boxplot = Boxplot::new_vertical(chromium_index * x_coords_multiplier - 23, &quartiles);
-        chart.draw_series(vec![boxplot]).unwrap();
-
-        chart.draw_series(
-            records.iter()
-                .filter(|record| record.webkit > 0.0)
-                .map(|record| {
-                    if webkit_index == 0 { webkit_index = record.index; }
-                    PathElement::new(vec![
-                        (x_coords_multiplier * record.index - 5, record.webkit),
-                        (x_coords_multiplier * record.index + 5, record.webkit),
-                    ], HSLColor(0.333, 1.0, 0.5).filled().stroke_width(0))
-                })
-        )
-            .unwrap();
-        let means = get_means_from_records(&records, ChartType::Webkit);
-        let means_vec = means.to_vec();
-        let quartiles = Quartiles::new(&means_vec);
-        let boxplot = Boxplot::new_vertical(webkit_index * x_coords_multiplier, &quartiles);
-        chart.draw_series(vec![boxplot]).unwrap();
-
-        chart.draw_series(
-            records.iter()
-                .filter(|record| record.firefox > 0.0)
-                .map(|record| {
-                    if firefox_index == 0 { firefox_index = record.index; }
-                    PathElement::new(vec![
-                        (x_coords_multiplier * record.index - 5 + 23, record.firefox),
-                        (x_coords_multiplier * record.index + 5 + 23, record.firefox),
-                    ], HSLColor(0.666, 1.0, 0.75).filled().stroke_width(0))
-                })
-        )
-            .unwrap();
-        let means = get_means_from_records(&records, ChartType::Firefox);
-        let means_vec = means.to_vec();
-        let quartiles = Quartiles::new(&means_vec);
-        let boxplot = Boxplot::new_vertical(firefox_index * x_coords_multiplier + 23, &quartiles);
-        chart.draw_series(vec![boxplot]).unwrap();
+        draw_browser_chart(&mut chart, &records, ChartType::Chromium, HSLColor(0.0, 1.0, 0.5), -23);
+        draw_browser_chart(&mut chart, &records, ChartType::Webkit, HSLColor(0.333, 1.0, 0.5), 0);
+        draw_browser_chart(&mut chart, &records, ChartType::Firefox, HSLColor(0.666, 1.0, 0.75), 23);
     }
 
     chart
@@ -541,7 +465,7 @@ fn create_browser_chart(
         .x_label_formatter(&|v: &i32| {
             let v = v.clone();
             for (name, records) in csv_records.clone().iter() {
-                let index = records.get(0).unwrap().index * x_coords_multiplier;
+                let index = records.get(0).unwrap().index * X_COORDS_MULTIPLIER;
                 if index == v {
                     return name.clone();
                 }
@@ -554,4 +478,54 @@ fn create_browser_chart(
         .draw()
         .unwrap()
     ;
+}
+
+fn draw_browser_chart(
+    chart: &mut ChartContext<BitMapBackend, Cartesian2d<WithKeyPoints<RangedCoordi32>, RangedCoordf32>>,
+    records: &Vec<CsvRecord>,
+    data_type: ChartType,
+    color: HSLColor,
+    horizontal_offset: i32,
+) {
+    let mut x_coordinate = 0;
+
+    chart.draw_series(
+        records.iter()
+            .filter(|record| {
+                match data_type {
+                    ChartType::Chromium => record.chromium > 1.0,
+                    ChartType::Firefox => record.firefox > 1.0,
+                    ChartType::Webkit => record.webkit > 1.0,
+                    _ => panic!("Non-browser charts cannot be displayed as browser charts"),
+                }
+            })
+            .map(|record| {
+                let y_value =
+                    match data_type {
+                        ChartType::Chromium => record.chromium,
+                        ChartType::Firefox => record.firefox,
+                        ChartType::Webkit => record.webkit,
+                        _ => panic!("Non-browser charts cannot be displayed as browser charts"),
+                    }
+                ;
+                if x_coordinate == 0 { x_coordinate = record.index * X_COORDS_MULTIPLIER + horizontal_offset; }
+                PathElement::new(vec![
+                    (x_coordinate.clone() - 5, y_value),
+                    (x_coordinate.clone() + 5, y_value),
+                ], color.filled().stroke_width(0))
+            })
+    )
+        .unwrap();
+
+    draw_candlesticks(chart, x_coordinate, get_means_from_records(&records, data_type), 5);
+}
+
+fn draw_candlesticks(chart: &mut ChartContext<BitMapBackend, Cartesian2d<WithKeyPoints<RangedCoordi32>, RangedCoordf32>>, x_coordinate: i32, means: Means, candle_width: i32) {
+    let whiskers_width = (candle_width as f32 * 1.5).ceil() as i32;
+    chart.draw_series(vec![CandleStick::new(x_coordinate, means.q3, means.max, means.min, means.q1, &BLACK, &BLACK, (candle_width * 2) as u32)]).unwrap();
+    chart.draw_series(vec![
+        PathElement::new(vec![(x_coordinate - whiskers_width, means.min), (x_coordinate + whiskers_width, means.min)], &BLACK),
+        PathElement::new(vec![(x_coordinate - whiskers_width, means.median), (x_coordinate + whiskers_width, means.median)], &BLACK),
+        PathElement::new(vec![(x_coordinate - whiskers_width, means.max), (x_coordinate + whiskers_width, means.max)], &BLACK)
+    ]).unwrap();
 }

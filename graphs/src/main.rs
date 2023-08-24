@@ -25,7 +25,7 @@ use plotters::style::IntoFont;
 use plotters::style::Color;
 use serde::Deserialize;
 
-const OUT_IMG_SIZE: (u32, u32) = (800, 1500);
+const OUT_IMG_SIZE: (u32, u32) = (600, 1800);
 
 type RecordsMap = Vec<(String, Vec<CsvRecord>)>;
 
@@ -60,21 +60,21 @@ enum PointDisplayType {
 
 #[derive(Debug)]
 struct Means {
-    min: i32,
-    q1: i32,
-    median: i32,
-    q3: i32,
-    max: i32,
+    min: f32,
+    q1: f32,
+    median: f32,
+    q3: f32,
+    max: f32,
 }
 
 impl Means {
-    fn to_vec(&self) -> Vec<i32> {
+    fn to_vec(&self) -> Vec<f64> {
         vec![
-            self.min,
-            self.q1,
-            self.median,
-            self.q3,
-            self.max,
+            self.min as f64,
+            self.q1 as f64,
+            self.median as f64,
+            self.q3 as f64,
+            self.max as f64,
         ]
     }
 }
@@ -83,14 +83,14 @@ impl Means {
 struct CsvRecord {
     #[serde(skip_deserializing)]
     index: i32,
-    install_time: i32,
-    build_time: i32,
-    deps_with_duplicates: i32,
-    deps_without_duplicates: i32,
-    build_size: i32,
-    chromium: i32,
-    firefox: i32,
-    webkit: i32,
+    install_time: f32,
+    build_time: f32,
+    deps_with_duplicates: f32,
+    deps_without_duplicates: f32,
+    build_size: f32,
+    chromium: f32,
+    firefox: f32,
+    webkit: f32,
 }
 
 fn main() {
@@ -134,11 +134,11 @@ fn main() {
 
     let roots = root.split_evenly((6, 1));
 
-    create_chart(&roots.get(0).unwrap(), &records_map, max_x, 0, maximums.install_time, PointDisplayType::HorizontalLine, ChartType::InstallTime, ShowMeans::True);
-    create_chart(&roots.get(1).unwrap(), &records_map, max_x, 0, maximums.build_time, PointDisplayType::HorizontalLine, ChartType::BuildTime, ShowMeans::True);
-    create_chart(&roots.get(2).unwrap(), &records_map, max_x, 0, maximums.build_size, PointDisplayType::Bar, ChartType::BuildSize, ShowMeans::False);
-    create_chart(&roots.get(3).unwrap(), &records_map, max_x, 0, maximums.deps_with_duplicates, PointDisplayType::Bar, ChartType::DepsWithDuplicates, ShowMeans::False);
-    create_chart(&roots.get(4).unwrap(), &records_map, max_x, 0, maximums.deps_without_duplicates, PointDisplayType::Bar, ChartType::DepsWithoutDuplicates, ShowMeans::False);
+    create_chart(&roots.get(0).unwrap(), &records_map, max_x, 0.0, maximums.install_time, PointDisplayType::HorizontalLine, ChartType::InstallTime, ShowMeans::True);
+    create_chart(&roots.get(1).unwrap(), &records_map, max_x, 0.0, maximums.build_time, PointDisplayType::HorizontalLine, ChartType::BuildTime, ShowMeans::True);
+    create_chart(&roots.get(2).unwrap(), &records_map, max_x, 0.0, maximums.build_size, PointDisplayType::Bar, ChartType::BuildSize, ShowMeans::False);
+    create_chart(&roots.get(3).unwrap(), &records_map, max_x, 0.0, maximums.deps_with_duplicates, PointDisplayType::Bar, ChartType::DepsWithDuplicates, ShowMeans::False);
+    create_chart(&roots.get(4).unwrap(), &records_map, max_x, 0.0, maximums.deps_without_duplicates, PointDisplayType::Bar, ChartType::DepsWithoutDuplicates, ShowMeans::False);
     create_browser_chart(&roots.get(5).unwrap(), &records_map, max_x, maximums);
 
     // To avoid the IO failure being ignored silently, we manually call the present function
@@ -151,28 +151,36 @@ fn main() {
 fn get_means_from_records(records: &Vec<CsvRecord>, data_type: ChartType) -> Means {
     let mut filtered: Vec<i32> = records.iter().map(|record| {
         match data_type {
-            ChartType::InstallTime => record.install_time,
-            ChartType::BuildTime => record.build_time,
-            ChartType::DepsWithDuplicates => record.deps_with_duplicates,
-            ChartType::DepsWithoutDuplicates => record.deps_without_duplicates,
-            ChartType::BuildSize => record.build_size,
-            ChartType::Chromium => record.chromium,
-            ChartType::Firefox => record.firefox,
-            ChartType::Webkit => record.webkit,
+            ChartType::InstallTime => record.install_time as i32,
+            ChartType::BuildTime => record.build_time as i32,
+            ChartType::DepsWithDuplicates => record.deps_with_duplicates as i32,
+            ChartType::DepsWithoutDuplicates => record.deps_without_duplicates as i32,
+            ChartType::BuildSize => record.build_size as i32,
+            ChartType::Chromium => record.chromium as i32,
+            ChartType::Firefox => record.firefox as i32,
+            ChartType::Webkit => record.webkit as i32,
         }
     })
+        .filter(|value| value > &0)
         .collect();
     filtered.sort();
 
     let sorted = filtered;
     let len = sorted.len();
 
+    let q1 = sorted.get(len / 4).unwrap().clone() as f32;
+    let q3 = sorted.get(len * 3 / 4).unwrap().clone() as f32;
+    let iqr = q3 - q1;
+    let min = q1 - iqr * 1.5;
+    let max = q3 + iqr * 1.5;
+    let median = sorted.get(len / 2).unwrap().clone() as f32;
+
     Means {
-        min: sorted.first().unwrap().clone(),
-        q1: sorted.get((len / 4) as usize).unwrap().clone() as i32,
-        median: sorted.get((len / 2) as usize).unwrap().clone() as i32,
-        q3: sorted.get((len * 3 / 4) as usize).unwrap().clone() as i32,
-        max: sorted.last().unwrap().clone(),
+        min,
+        q1,
+        median,
+        q3,
+        max,
     }
 }
 
@@ -228,14 +236,14 @@ fn get_csv_records(output_dir: String) -> RecordsMap {
 fn get_maximums(records_map: &RecordsMap) -> CsvRecord {
     let mut maximums = CsvRecord {
         index: 0,
-        install_time: 0,
-        build_time: 0,
-        deps_with_duplicates: 0,
-        deps_without_duplicates: 0,
-        build_size: 0,
-        chromium: 0,
-        firefox: 0,
-        webkit: 0,
+        install_time: 0.0,
+        build_time: 0.0,
+        deps_with_duplicates: 0.0,
+        deps_without_duplicates: 0.0,
+        build_size: 0.0,
+        chromium: 0.0,
+        firefox: 0.0,
+        webkit: 0.0,
     };
 
     for (_chart_name, records) in records_map.iter() {
@@ -274,8 +282,8 @@ fn create_chart(
     root: &DrawingArea<BitMapBackend, Shift>,
     csv_records: &RecordsMap,
     max_x: i32,
-    min_y: i32,
-    max_y: i32,
+    min_y: f32,
+    max_y: f32,
     point_display_type: PointDisplayType,
     chart_type: ChartType,
     show_means: ShowMeans
@@ -291,7 +299,7 @@ fn create_chart(
     let min_x: i32 = 0;
 
     // Add 5% to max Y to allow the chart to breathe on the top
-    let max_y = (max_y as f32 * 1.05) as i32;
+    let max_y = max_y * 1.025;
 
     let number_of_apps = csv_records.len() as f64;
 
@@ -341,11 +349,11 @@ fn create_chart(
             PointDisplayType::Bar => {
                 chart.draw_series(
                     records.iter()
-                        .filter(|record| value_function(record) > 0)
+                        .filter(|record| value_function(record) > 0.0)
                         .map(|record| {
                             let y_value = value_function(record);
                             Rectangle::new([
-                               (x_coords_multiplier * record.index - 2, 0),
+                               (x_coords_multiplier * record.index - 2, 0.0),
                                (x_coords_multiplier * record.index + 2, y_value),
                            ], color.clone())
                         })
@@ -355,7 +363,7 @@ fn create_chart(
             PointDisplayType::HorizontalLine => {
                 chart.draw_series(
                     records.iter()
-                        .filter(|record| value_function(record) > 0)
+                        .filter(|record| value_function(record) > 0.0)
                         .map(|record| {
                         let y_value = value_function(record);
                         PathElement::new(vec![
@@ -376,8 +384,7 @@ fn create_chart(
             let means = get_means_from_records(&records, chart_type);
             let means_vec = means.to_vec();
             let quartiles = Quartiles::new(&means_vec);
-            // let boxplot = Boxplot::new_horizontal(index, &quartiles);
-            let boxplot = Boxplot::new_vertical(index, &quartiles);
+            let boxplot = Boxplot::new_vertical(index * x_coords_multiplier, &quartiles);
             chart.draw_series(vec![boxplot]).unwrap();
         }
 
@@ -397,7 +404,7 @@ fn create_chart(
             "".into()
         })
         .y_desc(chart_title)
-        .x_label_style(("sans-serif", 15))
+        .x_label_style(("sans-serif", 12))
         .set_all_tick_mark_size(5)
         .draw()
         .unwrap()
@@ -420,21 +427,21 @@ fn create_browser_chart(
     x_key_points.push(x_key_points.last().unwrap() + x_coords_multiplier);
     let min_x: i32 = 0;
 
-    let mut min_y = i32::MAX;
+    let mut min_y = f32::MAX;
     for (_, records) in csv_records.iter() {
         for record in records.iter() {
-            if min_y > record.firefox && record.firefox > 0 {
+            if min_y > record.firefox && record.firefox > 0.0 {
                 min_y = record.firefox;
             }
-            if min_y > record.chromium && record.chromium > 0 {
+            if min_y > record.chromium && record.chromium > 0.0 {
                 min_y = record.chromium;
             }
-            if min_y > record.webkit && record.webkit > 0 {
+            if min_y > record.webkit && record.webkit > 0.0 {
                 min_y = record.webkit;
             }
         }
     }
-    let min_y = (min_y as f32 * 0.95) as i32;
+    let min_y = min_y * 0.975;
 
     let mut max_y = maximums.chromium;
     if maximums.firefox > max_y {
@@ -444,8 +451,7 @@ fn create_browser_chart(
         max_y = maximums.webkit;
     }
 
-    // Add 5% to max Y to allow the chart to breathe on the top
-    let max_y = (max_y as f32 * 1.05) as i32;
+    let max_y = max_y * 1.05;
 
     let chart_title = "In-browser execution (in ms)";
 
@@ -454,7 +460,7 @@ fn create_browser_chart(
 
     root.draw_text("― Chromium", &TextStyle::from(("sans-serif", 20).into_font()).color(&HSLColor(0.0, 1.0, 0.5)), (x_label_position.clone(), y_label_position.clone())).unwrap();
     root.draw_text("― Webkit", &TextStyle::from(("sans-serif", 20).into_font()).color(&HSLColor(0.333, 1.0, 0.5)), (x_label_position.clone() * 2, y_label_position.clone())).unwrap();
-    root.draw_text("― Firefox", &TextStyle::from(("sans-serif", 20).into_font()).color(&HSLColor(0.666, 1.0, 0.5)), (x_label_position.clone() * 3, y_label_position.clone())).unwrap();
+    root.draw_text("― Firefox", &TextStyle::from(("sans-serif", 20).into_font()).color(&HSLColor(0.666, 1.0, 0.75)), (x_label_position.clone() * 3, y_label_position.clone())).unwrap();
 
     let mut chart = ChartBuilder::on(&root)
         .x_label_area_size(60)
@@ -473,42 +479,63 @@ fn create_browser_chart(
     iter.sort_by(|a, b| a.0.cmp(&b.0));
 
     for (_chart_name, records) in iter {
+        let mut firefox_index = 0;
+        let mut chromium_index = 0;
+        let mut webkit_index = 0;
 
         chart.draw_series(
             records.iter()
-                .filter(|record| record.chromium > 0)
+                .filter(|record| record.chromium > 0.0)
                 .map(|record| {
-                PathElement::new(vec![
-                    (x_coords_multiplier * record.index - 10 - 23, record.chromium),
-                    (x_coords_multiplier * record.index + 10 - 23, record.chromium),
-                ], HSLColor(0.0, 1.0, 0.5).filled().stroke_width(0))
-            })
-        )
-            .unwrap();
-
-        chart.draw_series(
-            records.iter()
-                .filter(|record| record.webkit > 0)
-                .map(|record| {
-                PathElement::new(vec![
-                    (x_coords_multiplier * record.index - 10, record.webkit),
-                    (x_coords_multiplier * record.index + 10, record.webkit),
-                ], HSLColor(0.333, 1.0, 0.5).filled().stroke_width(0))
-            })
-        )
-            .unwrap();
-
-        chart.draw_series(
-            records.iter()
-                .filter(|record| record.firefox > 0)
-                .map(|record| {
+                    if chromium_index == 0 { chromium_index = record.index; }
                     PathElement::new(vec![
-                        (x_coords_multiplier * record.index - 10 + 23, record.firefox),
-                        (x_coords_multiplier * record.index + 10 + 23, record.firefox),
-                    ], HSLColor(0.666, 1.0, 0.5).filled().stroke_width(0))
+                        (x_coords_multiplier * record.index - 5 - 23, record.chromium),
+                        (x_coords_multiplier * record.index + 5 - 23, record.chromium),
+                    ], HSLColor(0.0, 1.0, 0.5).filled().stroke_width(0))
                 })
         )
             .unwrap();
+        let means = get_means_from_records(&records, ChartType::Chromium);
+        let means_vec = means.to_vec();
+        let quartiles = Quartiles::new(&means_vec);
+        let boxplot = Boxplot::new_vertical(chromium_index * x_coords_multiplier - 23, &quartiles);
+        chart.draw_series(vec![boxplot]).unwrap();
+
+        chart.draw_series(
+            records.iter()
+                .filter(|record| record.webkit > 0.0)
+                .map(|record| {
+                    if webkit_index == 0 { webkit_index = record.index; }
+                    PathElement::new(vec![
+                        (x_coords_multiplier * record.index - 5, record.webkit),
+                        (x_coords_multiplier * record.index + 5, record.webkit),
+                    ], HSLColor(0.333, 1.0, 0.5).filled().stroke_width(0))
+                })
+        )
+            .unwrap();
+        let means = get_means_from_records(&records, ChartType::Webkit);
+        let means_vec = means.to_vec();
+        let quartiles = Quartiles::new(&means_vec);
+        let boxplot = Boxplot::new_vertical(webkit_index * x_coords_multiplier, &quartiles);
+        chart.draw_series(vec![boxplot]).unwrap();
+
+        chart.draw_series(
+            records.iter()
+                .filter(|record| record.firefox > 0.0)
+                .map(|record| {
+                    if firefox_index == 0 { firefox_index = record.index; }
+                    PathElement::new(vec![
+                        (x_coords_multiplier * record.index - 5 + 23, record.firefox),
+                        (x_coords_multiplier * record.index + 5 + 23, record.firefox),
+                    ], HSLColor(0.666, 1.0, 0.75).filled().stroke_width(0))
+                })
+        )
+            .unwrap();
+        let means = get_means_from_records(&records, ChartType::Firefox);
+        let means_vec = means.to_vec();
+        let quartiles = Quartiles::new(&means_vec);
+        let boxplot = Boxplot::new_vertical(firefox_index * x_coords_multiplier + 23, &quartiles);
+        chart.draw_series(vec![boxplot]).unwrap();
     }
 
     chart
@@ -525,7 +552,7 @@ fn create_browser_chart(
             "".into()
         })
         .y_desc(chart_title)
-        .x_label_style(("sans-serif", 15))
+        .x_label_style(("sans-serif", 12))
         .set_all_tick_mark_size(5)
         .draw()
         .unwrap()

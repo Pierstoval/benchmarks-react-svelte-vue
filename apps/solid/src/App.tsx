@@ -1,25 +1,43 @@
 import type { Component } from 'solid-js';
+import { createSignal, For } from 'solid-js';
+import todoStore from './lib/todoStore';
+import './App.css';
 
-import logo from './logo.svg';
-import styles from './App.module.css';
+type Todo = { text: string };
 
 const App: Component = () => {
+  let input: HTMLInputElement | undefined;
+  const [newTodo, setNewTodo] = createSignal('');
+  const { todos, setTodos } = todoStore;
+
+  function addTodo() {
+    if (!newTodo()) {
+      return;
+    }
+    setTodos([...todos(), {text: newTodo()}]);
+    setNewTodo('');
+    input?.focus();
+  }
+
+  function removeTodo(todo: Todo) {
+    setTodos(todos().filter(t => t !== todo));
+  }
+
   return (
-    <div class={styles.App}>
-      <header class={styles.header}>
-        <img src={logo} class={styles.logo} alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          class={styles.link}
-          href="https://github.com/solidjs/solid"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn Solid
-        </a>
-      </header>
+    <div id="app">
+      <input ref={input} type="text" value={newTodo()} onInput={({target}) => setNewTodo(target.value)} placeholder="Add a new element"/>
+      <button type="button" disabled={newTodo().length === 0} onClick={addTodo}>Add</button>
+
+      <ul>
+        <For each={todos()}>
+          {(todo) => (
+            <li>
+                {todo.text}
+                <button onClick={() => removeTodo(todo)}>x</button>
+            </li>
+          )}
+        </For>
+      </ul>
     </div>
   );
 };

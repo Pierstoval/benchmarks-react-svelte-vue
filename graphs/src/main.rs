@@ -194,7 +194,7 @@ fn get_csv_records(output_dir: String) -> RecordsMap {
         .map(|app| {
             let csv_path = format!("{}/{}/{}.csv", base_csv_path.display(), output_dir, app);
             let app = app.clone();
-            let file = File::open(&csv_path).expect(&format!("Could not open csv file {}", csv_path));
+            let file = File::open(&csv_path).expect(&format!("Could not open csv file \"{}\"", csv_path));
             let csv_reader = csv::ReaderBuilder::new()
                 .has_headers(true)
                 .delimiter(b';')
@@ -444,7 +444,7 @@ fn create_browser_chart(
         .margin_right(15)
         .margin_bottom(15)
         .margin_left(15)
-        .caption(chart_title.clone(), ("sans-serif", 20.0).into_font())
+        .caption(chart_title, ("sans-serif", 20.0).into_font())
         // "+1" is here to allow the chart to breathe on the right side.
         .build_cartesian_2d((min_x..((max_x+1)*X_COORDS_MULTIPLIER)).with_key_points(x_key_points), min_y..max_y)
         .unwrap()

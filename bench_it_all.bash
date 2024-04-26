@@ -5,6 +5,18 @@ CWD=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 cd "$CWD"
 
 #
+# Env loading
+#
+
+if [[ "${SHELL}" == "/bin/bash" ]]; then
+  [[ -f "${HOME}/.bashrc" ]] && source "${HOME}/.bashrc" && echo "Sourced .bashrc"
+fi
+
+if [[ "${SHELL}" == "/usr/bin/zsh" ]]; then
+  [[ -f "${HOME}/.zshrc" ]] && source "${HOME}/.zshrc" && echo "Sourced .zshrc"
+fi
+
+#
 # Display functions
 #
 

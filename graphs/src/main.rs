@@ -160,6 +160,10 @@ fn get_means_from_records(records: &Vec<CsvRecord>, data_type: ChartType) -> Mea
     let sorted = filtered;
     let len = sorted.len();
 
+    if len == 0 {
+        panic!("Filtered records resulted in an empty set. Maybe your result set is incomplete?");
+    }
+
     let q1 = sorted.get(len / 4).unwrap().clone() as f32;
     let q3 = sorted.get(len * 3 / 4).unwrap().clone() as f32;
     let min = sorted.first().unwrap().clone() as f32;

@@ -90,6 +90,12 @@ end_info_line_with_ok
 info "Make sure \"yarn\" command is available..."
 if ! command -v yarn &> /dev/null
 then
+    info "Trying to load it via NVM..."
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+fi
+if ! command -v yarn &> /dev/null
+then
     end_info_line_with_error
     err "\"yarn\" command could not be found"
     err "If you have installed it, maybe Node or NVM environment was not properly loaded?"

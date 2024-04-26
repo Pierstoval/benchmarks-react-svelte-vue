@@ -75,6 +75,16 @@ then
 fi
 end_info_line_with_ok
 
+info "Make sure \"yarn\" command is available..."
+if ! command -v yarn &> /dev/null
+then
+    end_info_line_with_error
+    err "\"yarn\" command could not be found"
+    err "If you have installed it, maybe Node or NVM environment was not properly loaded?"
+    exit 1
+fi
+end_info_line_with_ok
+
 set -eu
 
 #

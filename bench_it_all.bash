@@ -35,11 +35,11 @@ end_info_line_with_error() {
 #
 
 if [[ "${SHELL}" == "/bin/bash" ]]; then
-  [[ -f "${HOME}/.bashrc" ]] && source "${HOME}/.bashrc" && info "Sourced .bashrc" && end_info_line_with_ok
+  [[ -f "${HOME}/.bashrc" ]] && . "${HOME}/.bashrc" && info "Sourced .bashrc" && end_info_line_with_ok
 fi
 
 if [[ "${SHELL}" == "/usr/bin/zsh" ]]; then
-  [[ -f "${HOME}/.zshrc" ]] && source "${HOME}/.zshrc" && info "Sourced .zshrc" && end_info_line_with_ok
+  [[ -f "${HOME}/.zshrc" ]] && . "${HOME}/.zshrc" && info "Sourced .zshrc" && end_info_line_with_ok
 fi
 
 #

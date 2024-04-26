@@ -11,12 +11,14 @@ set -u
 
 # Base dependencies
 sudo apt-get update
-sudo apt-get install \
+sudo apt-get install -y \
   git \
   jq \
+  gcc \
 
 ## Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+cargo install processtime
 
 ## NVM
 curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
@@ -26,6 +28,7 @@ curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh
 
 nvm install 20
 node -v
+npm i -g npm yarn
 
 ##
 echo "Done!"

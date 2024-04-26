@@ -5,18 +5,6 @@ CWD=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 cd "$CWD"
 
 #
-# Env loading
-#
-
-if [[ "${SHELL}" == "/bin/bash" ]]; then
-  [[ -f "${HOME}/.bashrc" ]] && source "${HOME}/.bashrc" && echo "Sourced .bashrc"
-fi
-
-if [[ "${SHELL}" == "/usr/bin/zsh" ]]; then
-  [[ -f "${HOME}/.zshrc" ]] && source "${HOME}/.zshrc" && echo "Sourced .zshrc"
-fi
-
-#
 # Display functions
 #
 
@@ -41,6 +29,18 @@ err() {
 end_info_line_with_error() {
     printf "\r \033[32m%s\033[0m\n" "❌"
 }
+
+#
+# Env loading
+#
+
+if [[ "${SHELL}" == "/bin/bash" ]]; then
+  [[ -f "${HOME}/.bashrc" ]] && source "${HOME}/.bashrc" && info "Sourced .bashrc"
+fi
+
+if [[ "${SHELL}" == "/usr/bin/zsh" ]]; then
+  [[ -f "${HOME}/.zshrc" ]] && source "${HOME}/.zshrc" && info "Sourced .zshrc"
+fi
 
 #
 # Input & dependencies checks

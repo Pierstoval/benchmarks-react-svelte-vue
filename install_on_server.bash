@@ -15,6 +15,8 @@ sudo apt-get install \
   git \
   jq \
 
+## Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ## NVM
 curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash

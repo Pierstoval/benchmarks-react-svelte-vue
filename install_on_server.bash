@@ -45,7 +45,7 @@ User=${USER}
 Restart=always
 RestartSec=3
 WorkingDirectory=${CWD}
-ExecStart=${SHELL} ${CWD}/bench_it_all.bash server
+ExecStart=/bin/bash --login ${CWD}/bench_it_all.bash server
 
 [Install]
 WantedBy=multi-user.target

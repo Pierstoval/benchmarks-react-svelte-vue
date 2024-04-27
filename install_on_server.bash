@@ -17,8 +17,10 @@ set -u
 sudo apt-get update
 sudo apt-get install -y \
   git \
-  jq \
   gcc \
+  pkg-config \
+  jq `# Used for graph generation` \
+  libfontconfig1-dev `# Used by one of the Rust libs for graph generation` \
 
 ## Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y

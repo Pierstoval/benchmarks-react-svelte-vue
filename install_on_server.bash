@@ -20,10 +20,12 @@ sudo apt-get install -y \
   gcc \
   pkg-config \
   jq `# Used for graph generation` \
-  libfontconfig1-dev `# Used by one of the Rust libs for graph generation` \
+  libfreetype6-dev libfontconfig1-dev `# Used by Rust Plotters crate` \
 
 ## Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+# Processtime is used to calculate build duration
 cargo install processtime
 
 ## NVM & Node

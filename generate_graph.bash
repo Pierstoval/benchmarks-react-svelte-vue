@@ -6,9 +6,9 @@ set -e
 
 cd "$CWD"
 
-#
-# Display functions
-#
+##
+## Display functions
+##
 
 info_ln() {
     printf "\033[32m%s\033[0m ${1}\n" "[INFO]"

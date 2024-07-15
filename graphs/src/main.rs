@@ -8,10 +8,12 @@ use std::io::Write;
 use std::os::unix::ffi::OsStrExt;
 use csv::Reader;
 use plotters::backend::BitMapBackend;
-use plotters::chart::{ChartBuilder, ChartContext};
+use plotters::chart::ChartBuilder;
+use plotters::chart::ChartContext;
 use plotters::coord::combinators::WithKeyPoints;
 use plotters::coord::Shift;
-use plotters::coord::types::{RangedCoordf32, RangedCoordi32};
+use plotters::coord::types::RangedCoordf32;
+use plotters::coord::types::RangedCoordi32;
 use plotters::style::BLACK;
 use plotters::style::HSLColor;
 use plotters::style::TextStyle;
@@ -22,12 +24,13 @@ use plotters::drawing::IntoDrawingArea;
 use plotters::element::CandleStick;
 use plotters::element::Rectangle;
 use plotters::element::PathElement;
-use plotters::prelude::{BindKeyPoints, Cartesian2d};
+use plotters::prelude::BindKeyPoints;
+use plotters::prelude::Cartesian2d;
 use plotters::style::IntoFont;
 use plotters::style::Color;
 use serde::Deserialize;
 
-const OUT_IMG_SIZE: (u32, u32) = (600, 1800);
+const OUT_IMG_SIZE: (u32, u32) = (1000, 1800);
 
 const X_COORDS_MULTIPLIER: i32 = 100;
 
@@ -86,6 +89,8 @@ struct CsvRecord {
 }
 
 fn main() {
+    println!("Begin processing graphs.");
+
     let matches = command!() // requires `cargo` feature
         .arg(Arg::new("output_dir"))
         .get_matches();
@@ -138,6 +143,8 @@ fn main() {
         .present()
         .expect("Unable to write result to file")
     ;
+
+    println!("Wrote graph to file: \"{}\".", file_name.as_str());
 }
 
 fn get_means_from_records(records: &Vec<CsvRecord>, data_type: ChartType) -> Means {
@@ -181,6 +188,7 @@ fn get_means_from_records(records: &Vec<CsvRecord>, data_type: ChartType) -> Mea
 
 fn get_csv_records(output_dir: String) -> RecordsMap {
     let cwd = std::env::current_dir().unwrap();
+
     let mut apps = fs::read_dir(cwd.join("apps"))
         .expect("Could not locate \"apps\" directory.")
         // Resolve paths to OsString to utf8 vector
@@ -379,13 +387,15 @@ fn create_chart(
             for (name, records) in csv_records.clone().iter() {
                 let index = records.get(0).unwrap().index * X_COORDS_MULTIPLIER;
                 if index == v {
-                    return name.clone();
+                    return name.clone().replace("-", " ");
                 }
             }
             "".into()
         })
+        .x_label_style(
+            TextStyle::from(("sans-serif", 12).into_font())
+        )
         .y_desc(chart_title)
-        .x_label_style(("sans-serif", 12))
         .set_all_tick_mark_size(5)
         .draw()
         .unwrap()
@@ -477,7 +487,9 @@ fn create_browser_chart(
             "".into()
         })
         .y_desc(chart_title)
-        .x_label_style(("sans-serif", 12))
+        .x_label_style(
+            TextStyle::from(("sans-serif", 12).into_font())
+        )
         .set_all_tick_mark_size(5)
         .draw()
         .unwrap()

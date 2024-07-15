@@ -4,9 +4,9 @@ CWD=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 
 cd "$CWD"
 
-#
-# Display functions
-#
+##
+## Display functions
+##
 
 info() {
     printf "    %s" "$1"
@@ -30,9 +30,9 @@ end_info_line_with_error() {
     printf "\r \033[32m%s\033[0m\n" "❌"
 }
 
-#
-# Env loading
-#
+##
+## Env loading
+##
 
 if [[ "${SHELL}" == "/bin/bash" ]]; then
   [[ -f "${HOME}/.bashrc" ]] && . "${HOME}/.bashrc" && info "Sourced .bashrc" && end_info_line_with_ok
@@ -42,9 +42,9 @@ if [[ "${SHELL}" == "/usr/bin/zsh" ]]; then
   [[ -f "${HOME}/.zshrc" ]] && . "${HOME}/.zshrc" && info "Sourced .zshrc" && end_info_line_with_ok
 fi
 
-#
-# Input & dependencies checks
-#
+##
+## Input & dependencies checks
+##
 
 if [[ -z "${OUTPUT_DIR}" ]]; then
     OUTPUT_DIR=$1
@@ -105,9 +105,9 @@ end_info_line_with_ok
 
 set -eu
 
-#
-# Helpers vars & functions
-#
+##
+## Helpers vars & functions
+##
 
 processtime=$(which processtime)
 yarn=$(which yarn)
@@ -149,9 +149,9 @@ save_value_to_csv() {
   echo "$value" >> "$filename"
 }
 
-#
-# Processing functions
-#
+##
+## Processing functions
+##
 
 remove_colors_regex="s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"
 
@@ -216,12 +216,11 @@ process() {
         "install_time;build_time;deps_with_duplicates;deps_without_duplicates;build_size;$e2e_headers"
 }
 
-#
-# Processing
-#
+##
+## Processing
+##
 
 apps_directories=$(cd "${CWD}/apps" && for f in *; do if [ -d "$f" ]; then echo "$f" ; fi ; done)
-# shellcheck disable=SC2206
 apps_directories_array=($apps_directories)
 
 shift # Drops first element of arguments

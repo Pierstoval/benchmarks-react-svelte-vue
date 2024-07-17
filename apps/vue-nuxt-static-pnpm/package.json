@@ -1,0 +1,23 @@
+{
+  "name": "vue-nuxt",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt",
+    "build-original-function": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate",
+    "build": "nuxt generate"
+  },
+  "dependencies": {
+    "core-js": "^3.32.0",
+    "nuxt": "^3.6.5",
+    "vue": "^3.3.4",
+    "vue-server-renderer": "^2.7.10",
+    "vue-template-compiler": "^2.7.10"
+  },
+  "devDependencies": {
+    "@nuxt/types": "^2.17.1",
+    "@nuxt/typescript-build": "^3.0.1"
+  }
+}

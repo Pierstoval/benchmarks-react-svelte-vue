@@ -32,7 +32,7 @@ const path = __dirname+"/apps/"+appToTest+"/dist/";
 
 const webserver = {
   port,
-  command: `yarn http-server -p ${port} ${path}`,
+  command: `npx http-server -p ${port} ${path}`,
   timeout: 30 * 1000,
   reuseExistingServer: !process.env.CI,
 };

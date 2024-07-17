@@ -103,6 +103,22 @@ then
 fi
 end_info_line_with_ok
 
+info "Make sure \"pnpm\" command is available..."
+if ! command -v pnpm &> /dev/null
+then
+    info "Trying to load it via NVM..."
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+fi
+if ! command -v pnpm &> /dev/null
+then
+    end_info_line_with_error
+    err "\"pnpm\" command could not be found"
+    err "If you have installed it, maybe Node or NVM environment was not properly loaded?"
+    exit 1
+fi
+end_info_line_with_ok
+
 set -eu
 
 ##
@@ -111,6 +127,7 @@ set -eu
 
 processtime=$(which processtime)
 yarn=$(which yarn)
+pnpm=$(which pnpm)
 du=$(which du)
 
 output_file_prefix() {
@@ -149,6 +166,116 @@ save_value_to_csv() {
   echo "$value" >> "$filename"
 }
 
+get_pkg_manager() {
+  app=$1
+
+  pkg_manager=$(echo "$app" | tr '-' ' ' | awk '{print $NF}')
+
+  if ! command -v "$pkg_manager" &> /dev/null
+  then
+      end_info_line_with_error
+      err "App \"$app\"'s package manager named \"$pkg_manager\" could not be found"
+      err "If you have installed it, maybe Node or NVM environment was not properly loaded?"
+      exit 1
+  fi
+  end_info_line_with_ok
+
+  echo "$pkg_manager"
+}
+
+get_install_cmd() {
+  app=$1
+  pkg_manager=$2
+
+  case $pkg_manager in
+    yarn)
+      echo "${yarn} --cwd \"apps/$app\" --frozen-lockfile install"
+      ;;
+
+    pnpm)
+      echo "${pnpm} --dir \"apps/$app\" --frozen-lockfile install"
+      ;;
+
+    *)
+      error "Unknown package manager \"$pkg_manager\""
+      exit 1
+      ;;
+  esac
+}
+
+get_build_cmd() {
+  app=$1
+  pkg_manager=$2
+
+  case $pkg_manager in
+    yarn)
+      echo "${yarn} --cwd \"apps/$app\" build"
+      ;;
+
+    pnpm)
+      echo "${pnpm} --dir \"apps/$app\" build"
+      ;;
+
+    *)
+      error "Unknown package manager \"$pkg_manager\""
+      exit 1
+      ;;
+  esac
+}
+
+get_list_cmd() {
+  app=$1
+  pkg_manager=$2
+
+  case $pkg_manager in
+    yarn)
+      # Commands explanation:
+      #    yarn --cwd apps/$app list --silent
+      #    | sed 's/^[^a-zA-Z0-9_@-]\+//g'     # Remove the "└─" or "├─" tree-related characters
+      cat << EOF
+      yarn --cwd "apps/$app" list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sort -u | wc -l
+EOF
+      ;;
+
+    pnpm)
+      cat << EOF
+      pnpm list --parseable --depth 9999 | tail -n +2 | sort -u | wc -l
+EOF
+      ;;
+
+    *)
+      error "Unknown package manager \"$pkg_manager\""
+      exit 1
+      ;;
+  esac
+}
+
+get_list_no_dups_cmd() {
+  app=$1
+  pkg_manager=$2
+
+  case $pkg_manager in
+    yarn)
+      # Commands explanation:
+      #    yarn --cwd apps/$app list --silent
+      #    | sed 's/^[^a-zA-Z0-9_@-]\+//g'     # Remove the "└─" or "├─" tree-related characters
+      #    | sed 's/@[0-9^~\.-]\+$//g'         # Remove the "@...` version tag
+      cat << EOF
+      yarn --cwd "apps/$app" list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l
+EOF
+      ;;
+
+    pnpm)
+      get_list_cmd "$app" "$pkg_manager"
+      ;;
+
+    *)
+      error "Unknown package manager \"$pkg_manager\""
+      exit 1
+      ;;
+  esac
+}
+
 ##
 ## Processing functions
 ##
@@ -157,16 +284,23 @@ remove_colors_regex="s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"
 
 process() {
     app=$1
+
     info "Cleanup..."
         git clean -fdx -- "apps/$app" | sed -r "$remove_colors_regex" 1>"$(log_filename "$app" "clean")" 2>&1
     end_info_line_with_ok
 
+    pkg_manager=$(get_pkg_manager "$app")
+    install_cmd=$(get_install_cmd "$app" "$pkg_manager")
+    build_cmd=$(get_build_cmd "$app" "$pkg_manager")
+    list_cmd=$(get_list_cmd "$app" "$pkg_manager")
+    list_no_dups_cmd=$(get_list_no_dups_cmd "$app" "$pkg_manager")
+
     info "Install dependencies..."
-        install_time=$(time_command "${yarn} --cwd=apps/$app --frozen-lockfile install")
+        install_time=$(time_command "${install_cmd}")
     end_info_line_with_ok
 
     info "Build static application..."
-        build_time=$(time_command "${yarn} --cwd=apps/$app build ")
+        build_time=$(time_command "$build_cmd")
     end_info_line_with_ok
 
     info "Counting dependencies..."
@@ -176,8 +310,8 @@ process() {
         #    | sed 's/@[0-9^~\.-]\+$//g'         # Remove the "@...` version tag
         #    | sort -u                           # Remove duplicate lines
         #    | wc -l                             # Counts number of elements
-        deps_with_duplicates=$(yarn --cwd "apps/$app" list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sort -u | wc -l)
-        deps_without_duplicates=$(yarn --cwd "apps/$app" list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l)
+        deps_with_duplicates=$($list_cmd)
+        deps_without_duplicates=$($list_no_dups_cmd)
     end_info_line_with_ok
 
     info "Determining build build_size..."
@@ -196,7 +330,7 @@ process() {
 
     info "Running runtime benchmarks using Playwright..."
         # Using only one worker (with "-j 1") to make sure performance test are executed with only one app running.
-        (TEST_APP=$app ${yarn} playwright test -j 1 | sed -r "$remove_colors_regex") 1>"$(log_filename "$app" "playwright")" 2>&1
+        (TEST_APP=$app ${pkg_manager} playwright test -j 1 | sed -r "$remove_colors_regex") 1>"$(log_filename "$app" "playwright")" 2>&1
 
         report=$(< playwright-report/report.json jq -r '.suites[0].specs[] | .tests[0] | "\(.projectName) \(.results[0].duration)"' | sort)
 

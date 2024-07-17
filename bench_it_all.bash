@@ -180,7 +180,7 @@ get_pkg_manager() {
   fi
   end_info_line_with_ok
 
-  echo "$pkg_manager"
+  echo "$pkg_manager" | xargs
 }
 
 get_install_cmd() {

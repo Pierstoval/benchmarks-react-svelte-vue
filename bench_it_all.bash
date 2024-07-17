@@ -233,13 +233,13 @@ get_list_cmd() {
       #    yarn --cwd apps/$app list --silent
       #    | sed 's/^[^a-zA-Z0-9_@-]\+//g'     # Remove the "└─" or "├─" tree-related characters
       cat << EOF
-      yarn --cwd "apps/$app" list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sort -u | wc -l
+      yarn --cwd $CWD/apps/$app list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sort -u | wc -l
 EOF
       ;;
 
     pnpm)
       cat << EOF
-      pnpm --dir apps/$app list --parseable --depth 9999 | tail -n +2 | sort -u | wc -l
+      pnpm --dir $CWD/apps/$app list --parseable --depth 9999 | tail -n +2 | sort -u | wc -l
 EOF
       ;;
 
@@ -261,12 +261,14 @@ get_list_no_dups_cmd() {
       #    | sed 's/^[^a-zA-Z0-9_@-]\+//g'     # Remove the "└─" or "├─" tree-related characters
       #    | sed 's/@[0-9^~\.-]\+$//g'         # Remove the "@...` version tag
       cat << EOF
-      yarn --cwd "apps/$app" list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l
+      yarn --cwd $CWD/apps/$app list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l
 EOF
       ;;
 
     pnpm)
-      get_list_cmd "$app" "$pkg_manager"
+      cat << EOF
+      pnpm --dir $CWD/apps/$app list --parseable --depth 9999 | tail -n +2 | sort -u | wc -l
+EOF
       ;;
 
     *)
@@ -286,7 +288,7 @@ process() {
     app=$1
 
     info "Cleanup..."
-        git clean -fdx -- "apps/$app" | sed -r "$remove_colors_regex"
+        git clean -fdx -- "$CWD/apps/$app" | sed -r "$remove_colors_regex"
     end_info_line_with_ok
 
     pkg_manager=$(get_pkg_manager "$app")
@@ -304,14 +306,8 @@ process() {
     end_info_line_with_ok
 
     info "Counting dependencies..."
-        # Commands explanation:
-        #    yarn --cwd apps/$app list --silent
-        #    | sed 's/^[^a-zA-Z0-9_@-]\+//g'     # Remove the "└─" or "├─" tree-related characters
-        #    | sed 's/@[0-9^~\.-]\+$//g'         # Remove the "@...` version tag
-        #    | sort -u                           # Remove duplicate lines
-        #    | wc -l                             # Counts number of elements
-        deps_with_duplicates=$($list_cmd)
-        deps_without_duplicates=$($list_no_dups_cmd)
+        deps_with_duplicates=$(eval $list_cmd)
+        deps_without_duplicates=$(eval $list_no_dups_cmd)
     end_info_line_with_ok
 
     info "Determining build build_size..."

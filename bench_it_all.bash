@@ -145,6 +145,8 @@ log_filename() {
 }
 
 time_command() {
+    cmd=$1
+    logfile=$2
     # shellcheck disable=SC2086
     ${processtime} --format=ms -- $1 | tail -1
 }
@@ -178,7 +180,6 @@ get_pkg_manager() {
       err "If you have installed it, maybe Node or NVM environment was not properly loaded?"
       exit 1
   fi
-  end_info_line_with_ok
 
   echo "$pkg_manager" | xargs
 }
@@ -193,7 +194,7 @@ get_install_cmd() {
       ;;
 
     pnpm)
-      echo "${pnpm} --dir \"apps/$app\" --frozen-lockfile install"
+      echo "${pnpm} --dir apps/$app --reporter=silent install"
       ;;
 
     *)
@@ -213,7 +214,7 @@ get_build_cmd() {
       ;;
 
     pnpm)
-      echo "${pnpm} --dir \"apps/$app\" build"
+      echo "${pnpm} --dir apps/$app --reporter=silent build"
       ;;
 
     *)
@@ -239,7 +240,7 @@ EOF
 
     pnpm)
       cat << EOF
-      pnpm list --parseable --depth 9999 | tail -n +2 | sort -u | wc -l
+      pnpm --dir apps/$app list --parseable --depth 9999 | tail -n +2 | sort -u | wc -l
 EOF
       ;;
 
@@ -286,7 +287,7 @@ process() {
     app=$1
 
     info "Cleanup..."
-        git clean -fdx -- "apps/$app" | sed -r "$remove_colors_regex" 1>"$(log_filename "$app" "clean")" 2>&1
+        git clean -fdx -- "apps/$app" | sed -r "$remove_colors_regex"
     end_info_line_with_ok
 
     pkg_manager=$(get_pkg_manager "$app")
@@ -295,11 +296,11 @@ process() {
     list_cmd=$(get_list_cmd "$app" "$pkg_manager")
     list_no_dups_cmd=$(get_list_no_dups_cmd "$app" "$pkg_manager")
 
-    info "Install dependencies..."
+    info "Install dependencies with command:  ${install_cmd}"
         install_time=$(time_command "${install_cmd}")
     end_info_line_with_ok
 
-    info "Build static application..."
+    info "Build static application with command:  ${build_cmd}"
         build_time=$(time_command "$build_cmd")
     end_info_line_with_ok
 
@@ -330,7 +331,7 @@ process() {
 
     info "Running runtime benchmarks using Playwright..."
         # Using only one worker (with "-j 1") to make sure performance test are executed with only one app running.
-        (TEST_APP=$app ${pkg_manager} playwright test -j 1 | sed -r "$remove_colors_regex") 1>"$(log_filename "$app" "playwright")" 2>&1
+        (TEST_APP=$app yarn playwright test -j 1 | sed -r "$remove_colors_regex") 1>"$(log_filename "$app" "playwright")" 2>&1
 
         report=$(< playwright-report/report.json jq -r '.suites[0].specs[] | .tests[0] | "\(.projectName) \(.results[0].duration)"' | sort)
 

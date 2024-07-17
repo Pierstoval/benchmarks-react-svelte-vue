@@ -49,6 +49,8 @@ npm i -g npm yarn
 
 # pnpm package manager
 wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.bashrc" SHELL="$(which bash)" bash -
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export PATH="$PNPM_HOME:$PATH"
 pnpm add -g pnpm
 
 # Install http server for runtime tests

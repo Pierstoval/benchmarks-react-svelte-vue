@@ -197,7 +197,7 @@ get_install_cmd() {
       ;;
 
     *)
-      error "Unknown package manager \"$pkg_manager\""
+      err "Unknown package manager \"$pkg_manager\""
       exit 1
       ;;
   esac
@@ -217,7 +217,7 @@ get_build_cmd() {
       ;;
 
     *)
-      error "Unknown package manager \"$pkg_manager\""
+      err "Unknown package manager \"$pkg_manager\""
       exit 1
       ;;
   esac
@@ -244,7 +244,7 @@ EOF
       ;;
 
     *)
-      error "Unknown package manager \"$pkg_manager\""
+      err "Unknown package manager \"$pkg_manager\""
       exit 1
       ;;
   esac
@@ -270,7 +270,7 @@ EOF
       ;;
 
     *)
-      error "Unknown package manager \"$pkg_manager\""
+      err "Unknown package manager \"$pkg_manager\""
       exit 1
       ;;
   esac

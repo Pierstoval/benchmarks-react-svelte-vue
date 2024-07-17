@@ -146,7 +146,6 @@ log_filename() {
 
 time_command() {
     cmd=$1
-    logfile=$2
     # shellcheck disable=SC2086
     ${processtime} --format=ms -- $1 | tail -1
 }

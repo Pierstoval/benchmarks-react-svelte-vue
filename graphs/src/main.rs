@@ -30,9 +30,9 @@ use plotters::style::IntoFont;
 use plotters::style::Color;
 use serde::Deserialize;
 
-const OUT_IMG_SIZE: (u32, u32) = (1000, 1800);
+const OUT_IMG_SIZE: (u32, u32) = (1800, 1800);
 
-const X_COORDS_MULTIPLIER: i32 = 100;
+const X_COORDS_MULTIPLIER: i32 = 80;
 
 type RecordsMap = Vec<(String, Vec<CsvRecord>)>;
 

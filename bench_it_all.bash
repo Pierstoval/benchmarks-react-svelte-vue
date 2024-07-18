@@ -356,15 +356,16 @@ apps_directories_array=($apps_directories)
 shift # Drops first element of arguments
 apps_to_process="$*" # Retrieves variadic elements after the first one (1st one excluded)
 
-info_ln "apps_to_process: $apps_to_process"
-
 if [[ -z $apps_to_process ]]
 then
+    info_ln "Apps to process: all"
     note " Reminder: you can also add a second argument to this script if you want to run only one single test suite."
     note " Example:"
     curscript=$(basename "$0")
     randomapp=${apps_directories_array[ $RANDOM % ${#apps_directories_array[@]} ]}
     note "  $curscript ${OUTPUT_DIR} ${randomapp}"
+else
+    info_ln "Apps to process: $apps_to_process"
 fi
 
 info_ln "Processing tests..."

@@ -189,11 +189,11 @@ get_install_cmd() {
 
   case $pkg_manager in
     yarn)
-      echo "${yarn} --cwd \"apps/$app\" --frozen-lockfile install"
+      echo "${yarn} --cwd=$CWD/apps/$app --frozen-lockfile install"
       ;;
 
     pnpm)
-      echo "${pnpm} --dir apps/$app --reporter=silent install"
+      echo "${pnpm} --dir $CWD/apps/$app --reporter=silent install"
       ;;
 
     *)
@@ -209,11 +209,11 @@ get_build_cmd() {
 
   case $pkg_manager in
     yarn)
-      echo "${yarn} --cwd \"apps/$app\" build"
+      echo "${yarn} --cwd=$CWD/apps/$app run build"
       ;;
 
     pnpm)
-      echo "${pnpm} --dir apps/$app --reporter=silent build"
+      echo "${pnpm} --dir $CWD/apps/$app --reporter=silent build"
       ;;
 
     *)
@@ -230,10 +230,10 @@ get_list_cmd() {
   case $pkg_manager in
     yarn)
       # Commands explanation:
-      #    yarn --cwd apps/$app list --silent
+      #    yarn --cwd=apps/$app list --silent
       #    | sed 's/^[^a-zA-Z0-9_@-]\+//g'     # Remove the "└─" or "├─" tree-related characters
       cat << EOF
-      yarn --cwd $CWD/apps/$app list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sort -u | wc -l
+      yarn --cwd=$CWD/apps/$app list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sort -u | wc -l
 EOF
       ;;
 
@@ -257,11 +257,11 @@ get_list_no_dups_cmd() {
   case $pkg_manager in
     yarn)
       # Commands explanation:
-      #    yarn --cwd apps/$app list --silent
+      #    yarn --cwd=apps/$app list --silent
       #    | sed 's/^[^a-zA-Z0-9_@-]\+//g'     # Remove the "└─" or "├─" tree-related characters
       #    | sed 's/@[0-9^~\.-]\+$//g'         # Remove the "@...` version tag
       cat << EOF
-      yarn --cwd $CWD/apps/$app list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l
+      yarn --cwd=$CWD/apps/$app list --silent | sed 's/^[^a-zA-Z0-9_@-]\+//g' | sed 's/@[0-9^~\.-]\+$//g' | sort -u | wc -l
 EOF
       ;;
 
@@ -298,7 +298,7 @@ process() {
     list_no_dups_cmd=$(get_list_no_dups_cmd "$app" "$pkg_manager")
 
     info "Install dependencies with command:  ${install_cmd}"
-        install_time=$(time_command "${install_cmd}")
+        install_time=$(time_command "$install_cmd")
     end_info_line_with_ok
 
     info "Build static application with command:  ${build_cmd}"

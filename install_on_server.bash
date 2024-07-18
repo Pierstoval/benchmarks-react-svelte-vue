@@ -44,14 +44,8 @@ curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh
 nvm install 20
 node -v
 
-# Yarn package manager
-npm i -g npm yarn
-
-# pnpm package manager
-wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.bashrc" SHELL="$(which bash)" bash -
-export PNPM_HOME="$HOME/.local/share/pnpm"
-export PATH="$PNPM_HOME:$PATH"
-pnpm add -g pnpm
+# Package managers
+npm i -g npm yarn pnpm
 
 # Install http server for runtime tests
 npx http-server --help

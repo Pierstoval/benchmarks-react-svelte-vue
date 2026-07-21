@@ -34,13 +34,13 @@ end_info_line_with_error() {
 ## Env loading
 ##
 
-if [[ "${SHELL}" == "/bin/bash" ]]; then
-  [[ -f "${HOME}/.bashrc" ]] && . "${HOME}/.bashrc" && info "Sourced .bashrc" && end_info_line_with_ok
-fi
-
-if [[ "${SHELL}" == "/usr/bin/zsh" ]]; then
-  [[ -f "${HOME}/.zshrc" ]] && . "${HOME}/.zshrc" && info "Sourced .zshrc" && end_info_line_with_ok
-fi
+#if [[ "${SHELL}" == "/bin/bash" ]]; then
+#  [[ -f "${HOME}/.bashrc" ]] && . "${HOME}/.bashrc" && info "Sourced .bashrc" && end_info_line_with_ok
+#fi
+#
+#if [[ "${SHELL}" == "/usr/bin/zsh" ]]; then
+#  [[ -f "${HOME}/.zshrc" ]] && . "${HOME}/.zshrc" && info "Sourced .zshrc" && end_info_line_with_ok
+#fi
 
 ##
 ## Input & dependencies checks

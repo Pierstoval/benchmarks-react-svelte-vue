@@ -31,16 +31,15 @@ if [[ -z "${OUTPUT_DIR}" ]]; then
     exit 1
 fi
 
-if { ( ! command -v nvm >/dev/null 2>&1 ) && [ -d "$HOME/.nvm" ] }
-then
-  info "Loading NVM..."
+exists=$(! command -v nvm >/dev/null 2>&1 && [ -d "$HOME/.nvm" ] )
+if $exists ; then
+  info_ln "Loading NVM..."
   export NVM_DIR="$HOME/.nvm"
   [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 fi
 
 info "Make sure processtime is installed..."
-if ! command -v processtime &> /dev/null
-then
+if ! command -v processtime &> /dev/null ; then
     end_info_line_with_error
     err "processtime could not be found"
     err "Install it with \"cargo install processtime\"."
@@ -49,8 +48,7 @@ fi
 end_info_line_with_ok
 
 info "Make sure \"du\" command is available..."
-if ! command -v du &> /dev/null
-then
+if ! command -v du &> /dev/null ; then
     end_info_line_with_error
     err "\"du\" command could not be found"
     err "Possible causes:"
@@ -61,8 +59,7 @@ fi
 end_info_line_with_ok
 
 info "Make sure \"jq\" command is available..."
-if ! command -v jq &> /dev/null
-then
+if ! command -v jq &> /dev/null ; then
     end_info_line_with_error
     err "\"jq\" command could not be found"
     err "Please install it on your system using your preferred method (easier with your native package manager like apt, yum, apk, etc.)"
@@ -71,8 +68,7 @@ fi
 end_info_line_with_ok
 
 info "Make sure \"xvfb-run\" command is available..."
-if ! command -v xvfb-run &> /dev/null
-then
+if ! command -v xvfb-run &> /dev/null ; then
     end_info_line_with_error
     err "\"xvfb-run\" could not be found"
     err "Install the \"xvfb\" package (e.g. apt install xvfb) so headed Playwright browsers can run on a virtual display."
@@ -81,8 +77,7 @@ fi
 end_info_line_with_ok
 
 info "Make sure \"yarn\" command is available..."
-if ! command -v yarn &> /dev/null
-then
+if ! command -v yarn &> /dev/null ; then
     end_info_line_with_error
     err "\"yarn\" command could not be found"
     err "If you have installed it, maybe Node or NVM environment was not properly loaded?"
@@ -91,8 +86,7 @@ fi
 end_info_line_with_ok
 
 info "Make sure \"pnpm\" command is available..."
-if ! command -v pnpm &> /dev/null
-then
+if ! command -v pnpm &> /dev/null ; then
     end_info_line_with_error
     err "\"pnpm\" command could not be found"
     err "If you have installed it, maybe Node or NVM environment was not properly loaded?"
@@ -178,8 +172,7 @@ get_pkg_manager() {
 
   pkg_manager=$(echo "$app" | tr '-' ' ' | awk '{print $NF}')
 
-  if ! command -v "$pkg_manager" &> /dev/null
-  then
+  if ! command -v "$pkg_manager" &> /dev/null ; then
       end_info_line_with_error
       err "App \"$app\"'s package manager named \"$pkg_manager\" could not be found"
       err "If you have installed it, maybe Node or NVM environment was not properly loaded?"
@@ -367,9 +360,15 @@ apps_directories=$(cd "${CWD}/apps" && for f in *; do if [ -d "$f" ]; then echo 
 apps_directories_array=($apps_directories)
 
 # Main dependencies installation, in case it was not done by the ./install_on_server.bash script.
-pnpm install
-pnpm playwright install-deps  # Install browser dependencies, might use sudo
-pnpm playwright install       # Install browsers themselves
+pnpm install --lockfile-only
+if ! pnpm playwright install-deps --dry-run >/dev/null 2>&1 ; then
+  info_ln "Install missing Playwright dependencies (might use sudo)"
+  pnpm playwright install-deps
+fi
+if ! pnpm playwright install --dry-run >/dev/null 2>&1 ; then
+  info_ln "Install browsers for Playwright"
+  pnpm playwright install
+fi
 
 info_ln "Environment:"
 info_ln "  node $(node --version)"
@@ -381,8 +380,7 @@ info_ln "  $(processtime --version)"
 shift # Drops first element off of arguments
 apps_to_process="$*" # Retrieves variadic elements after the first one (1st one excluded)
 
-if [[ -z $apps_to_process ]]
-then
+if [[ -z $apps_to_process ]] ; then
     info_ln "Apps to process: all"
     note " Reminder: you can also add a second argument to this script if you want to run only one single test suite."
     note " Example:"

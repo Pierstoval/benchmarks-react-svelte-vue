@@ -31,6 +31,13 @@ if [[ -z "${OUTPUT_DIR}" ]]; then
     exit 1
 fi
 
+if { ( ! command -v nvm >/dev/null 2>&1 ) && [ -d "$HOME/.nvm" ] }
+then
+  info "Loading NVM..."
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+fi
+
 info "Make sure processtime is installed..."
 if ! command -v processtime &> /dev/null
 then
@@ -76,12 +83,6 @@ end_info_line_with_ok
 info "Make sure \"yarn\" command is available..."
 if ! command -v yarn &> /dev/null
 then
-    info "Trying to load it via NVM..."
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-fi
-if ! command -v yarn &> /dev/null
-then
     end_info_line_with_error
     err "\"yarn\" command could not be found"
     err "If you have installed it, maybe Node or NVM environment was not properly loaded?"
@@ -90,12 +91,6 @@ fi
 end_info_line_with_ok
 
 info "Make sure \"pnpm\" command is available..."
-if ! command -v pnpm &> /dev/null
-then
-    info "Trying to load it via NVM..."
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-fi
 if ! command -v pnpm &> /dev/null
 then
     end_info_line_with_error

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -6,9 +6,11 @@ CWD=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 
 cd "$CWD"
 
-NVM_VERSION="v0.39.7"
+. "$CWD/_helpers.bash"
+
+NVM_VERSION="v0.40.8"
 if [[ -z "${NODE_VERSION}" ]]; then
-  NODE_VERSION=20
+  NODE_VERSION=24
 fi
 
 set -u
@@ -16,6 +18,7 @@ set -u
 ##
 ## Base dependencies
 ##
+info_ln "Installing system dependencies"
 sudo apt-get update
 sudo apt-get install -y \
   git \
@@ -28,32 +31,48 @@ sudo apt-get install -y \
 ##
 ## Rust
 ##
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+if ! command -v cargo &> /dev/null
+then
+  info_ln "Installing Rust"
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+fi
 
 ##
 ## Processtime is used to calculate build duration
 ##
-cargo install processtime
+if ! command -v cargo &> /dev/null
+then
+  info_ln "Installing Processtime"
+  cargo install processtime
+fi
 
 ##
 ## NVM & Node
 ##
-curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
-  export NVM_DIR="$HOME/.nvm"
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[[ -f "${HOME}/.bashrc" ]] && source "${HOME}/.bashrc" && echo "Sourced .bashrc"
-nvm install 24
+if ! command -v nvm &> /dev/null
+then
+  info_ln "Installing NVM"
+  curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+  [[ -f "${HOME}/.bashrc" ]] && source "${HOME}/.bashrc" && echo "Sourced .bashrc"
+  nvm install "$NODE_VERSION"
+fi
 node -v
 
 # Package managers
+info_ln "Installing Node package managers and runtime dependencies"
 npm i -g npm yarn pnpm
 
 # Install http server for runtime tests
-npx http-server --help
+pnpx --yes http-server --version
 
 ##
 ## Systemd service installation
 ##
+
+info_ln "Installing systemd service"
+
 CONTENT=$(cat <<EOF
 [Unit]
 Description=Benchmark frontend frameworks
@@ -79,9 +98,9 @@ sudo systemctl start benchmark-frontend-frameworks.service
 ## Playwright and browsers
 ##
 pnpm install
-pnpm run playwright install-deps  # Install browser dependencies, might use sudo
-pnpm run playwright install       # Install browsers themselves
+pnpm playwright install-deps  # Install browser dependencies, might use sudo
+pnpm playwright install       # Install browsers themselves
 
 ##
 
-echo "Done!"
+info "Done!"

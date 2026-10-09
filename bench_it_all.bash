@@ -96,17 +96,6 @@ end_info_line_with_ok
 
 set -eu
 
-##
-## Helpers vars & functions
-##
-
-processtime=$(which processtime)
-yarn=$(which yarn)
-pnpm=$(which pnpm)
-du=$(which du)
-
-remove_colors_regex="s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"
-
 # Always run headed Playwright under xvfb-run (provides its own X11 display).
 # - No Wayland: xvfb-run works as usual.
 # - Wayland present (with or without a host X11 stack): clear WAYLAND_* and force X11
@@ -353,6 +342,19 @@ process() {
 }
 
 ##
+## Helpers vars & functions
+##
+
+processtime=$(which processtime)
+node=$(which node)
+npm=$(which npm)
+yarn=$(which yarn)
+pnpm=$(which pnpm)
+du=$(which du)
+
+remove_colors_regex="s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"
+
+##
 ## Processing
 ##
 
@@ -371,11 +373,11 @@ if ! pnpm playwright install --dry-run >/dev/null 2>&1 ; then
 fi
 
 info_ln "Environment:"
-info_ln "  node $(node --version)"
-info_ln "  npm $(npm --version)"
-info_ln "  yarn $(yarn --version)"
-info_ln "  pnpm $(pnpm --version)"
-info_ln "  $(processtime --version)"
+info_ln "  node $($node --version)"
+info_ln "  npm $($npm --version)"
+info_ln "  yarn $($yarn --version)"
+info_ln "  pnpm $($pnpm --version)"
+info_ln "  $($processtime --version)"
 
 shift # Drops first element off of arguments
 apps_to_process="$*" # Retrieves variadic elements after the first one (1st one excluded)

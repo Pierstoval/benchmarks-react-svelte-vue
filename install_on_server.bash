@@ -78,9 +78,9 @@ sudo systemctl start benchmark-frontend-frameworks.service
 ##
 ## Playwright and browsers
 ##
-yarn install
-yarn playwright install-deps  # Install browser dependencies, might use sudo
-yarn playwright install       # Install browsers themselves
+pnpm install
+pnpm run playwright install-deps  # Install browser dependencies, might use sudo
+pnpm run playwright install       # Install browsers themselves
 
 ##
 

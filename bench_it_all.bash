@@ -395,6 +395,11 @@ process() {
 apps_directories=$(cd "${CWD}/apps" && for f in *; do if [ -d "$f" ]; then echo "$f" ; fi ; done)
 apps_directories_array=($apps_directories)
 
+# Main dependencies installation, in case it was not done by the ./install_on_server.bash script.
+pnpm install
+pnpm playwright install-deps  # Install browser dependencies, might use sudo
+pnpm playwright install       # Install browsers themselves
+
 info_ln "Environment:"
 info_ln "  node $(node --version)"
 info_ln "  npm $(npm --version)"

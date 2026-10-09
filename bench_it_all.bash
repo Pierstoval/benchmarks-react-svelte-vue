@@ -140,6 +140,8 @@ yarn=$(which yarn)
 pnpm=$(which pnpm)
 du=$(which du)
 
+remove_colors_regex="s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"
+
 # Always run headed Playwright under xvfb-run (provides its own X11 display).
 # - No Wayland: xvfb-run works as usual.
 # - Wayland present (with or without a host X11 stack): clear WAYLAND_* and force X11
@@ -315,8 +317,6 @@ EOF
 ## Processing functions
 ##
 
-remove_colors_regex="s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"
-
 process() {
     app=$1
 
@@ -395,7 +395,14 @@ process() {
 apps_directories=$(cd "${CWD}/apps" && for f in *; do if [ -d "$f" ]; then echo "$f" ; fi ; done)
 apps_directories_array=($apps_directories)
 
-shift # Drops first element of arguments
+info_ln "Environment:"
+info_ln "  node $(node --version)"
+info_ln "  npm $(npm --version)"
+info_ln "  yarn $(yarn --version)"
+info_ln "  pnpm $(pnpm --version)"
+info_ln "  $(processtime --version)"
+
+shift # Drops first element off of arguments
 apps_to_process="$*" # Retrieves variadic elements after the first one (1st one excluded)
 
 if [[ -z $apps_to_process ]]

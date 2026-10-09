@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 CWD=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 

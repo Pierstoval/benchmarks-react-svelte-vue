@@ -23,6 +23,7 @@ sudo apt-get install -y \
   pkg-config \
   jq `# Used for graph generation` \
   libfreetype6-dev libfontconfig1-dev `# Used by Rust Plotters crate` \
+  xvfb `# Virtual display for Playwright`
 
 ##
 ## Rust

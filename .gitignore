@@ -7,3 +7,6 @@ node_modules/
 # Remove dist dirs for *all* projects.
 # This prevent having to update .gitignore everywhere.
 apps/*/dist
+
+.playwright-cli/
+test-results

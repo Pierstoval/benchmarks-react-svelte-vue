@@ -87,6 +87,16 @@ then
 fi
 end_info_line_with_ok
 
+info "Make sure \"xvfb-run\" command is available..."
+if ! command -v xvfb-run &> /dev/null
+then
+    end_info_line_with_error
+    err "\"xvfb-run\" could not be found"
+    err "Install the \"xvfb\" package (e.g. apt install xvfb) so headed Playwright browsers can run on a virtual display."
+    exit 1
+fi
+end_info_line_with_ok
+
 info "Make sure \"yarn\" command is available..."
 if ! command -v yarn &> /dev/null
 then
@@ -129,6 +139,29 @@ processtime=$(which processtime)
 yarn=$(which yarn)
 pnpm=$(which pnpm)
 du=$(which du)
+
+# Always run headed Playwright under xvfb-run (provides its own X11 display).
+# - No Wayland: xvfb-run works as usual.
+# - Wayland present (with or without a host X11 stack): clear WAYLAND_* and force X11
+#   so Chromium/Firefox use Xvfb instead of the interactive Wayland compositor.
+run_playwright_headed_isolated() {
+    local app=$1
+    local log_file
+    log_file=$(log_filename "$app" "playwright")
+
+    (
+      TEST_APP=$app \
+      BENCHMARK_DISPLAY_BACKEND=x11 \
+      xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
+        env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET \
+          XDG_SESSION_TYPE=x11 \
+          GDK_BACKEND=x11 \
+          QT_QPA_PLATFORM=xcb \
+          MOZ_ENABLE_WAYLAND=0 \
+          yarn playwright test -j 1 --headed \
+        | sed -r "$remove_colors_regex"
+    ) 1>"$log_file" 2>&1
+}
 
 output_file_prefix() {
     app=$1
@@ -325,10 +358,19 @@ process() {
     end_info_line_with_ok
 
     info "Running runtime benchmarks using Playwright..."
-        # Using only one worker (with "-j 1") to make sure performance test are executed with only one app running.
-        (TEST_APP=$app yarn playwright test -j 1 | sed -r "$remove_colors_regex") 1>"$(log_filename "$app" "playwright")" 2>&1
+        # One worker (-j 1); virtual display isolated from the interactive X11 and/or Wayland session.
+        run_playwright_headed_isolated "$app"
 
-        report=$(< playwright-report/report.json jq -r '.suites[0].specs[] | .tests[0] | "\(.projectName) \(.results[0].duration)"' | sort)
+        # In-browser wall time from the browser_wall_time_ms test annotation.
+        report=$(< playwright-report/report.json jq -r '
+          .suites[0].specs[]
+          | .tests[0]
+          | . as $t
+          | ($t.annotations
+              | map(select(.type == "browser_wall_time_ms"))
+              | .[0].description) as $ms
+          | "\($t.projectName) \($ms)"
+        ' | sort)
 
         e2e_headers=$(echo "${report}" | awk '{print $1}' | tr '\n' ';' | sed '$ s/;$//')
         if [[ -z "$e2e_headers" ]]; then
